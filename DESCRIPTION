@@ -1,0 +1,12 @@
+Package: LCMS
+Type: Package
+Title: Pretreatment for mzXML files from LCMS
+Version: 0.1.0
+Author: Caroline Peltier
+Maintainer: Caroline Peltier <caroline.peltier@inrae.fr>
+Description: This package can be usd for LCMS pretreatement (especially in lipidomics).
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Imports: MSnbase,stats,ggplot2,data.table
