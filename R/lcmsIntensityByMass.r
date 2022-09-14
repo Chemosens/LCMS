@@ -16,10 +16,12 @@
 #' #data(lcms)
 #' #int_mass=lcmsIntensityByMass(lcms,rt=c(450,455))
 #' #head(int_mass)
-#'@importFrom MSnbase filterRt 
+#'@importFrom MSnbase filterRt rtime
 #'@importFrom MSnbase estimateNoise
-lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE)
+lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,byCTP=0.001,centroided=FALSE,ppm=15)
 { name=NULL
+print("lcms by mass")
+  
   if(!is.null(rt))
   {
      lcms=filterRt(lcms,rt)
@@ -101,14 +103,25 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
     }
     if(comparisonToPeaks)
     { 
-      ibm2=lcmsIntensityByMass(lcms,by=0.001,agregation = "sum",rt=rt)
-      sp1 <- new("Spectrum1",intensity = ibm2$df[,"intensity"], mz =ibm2$df[,"mz"], centroided = FALSE)
-      noise=estimateNoise(sp1)[1,"intensity"] 
-      peaks=pickingPeaks(ibm2$df)
-      peaks2=peaks[peaks[,"intensity"]>10*noise,]
-      
-      res=mzmat=mztheo=rep(NA,length(unique(integrationTable[,"name"])))
-      names(res)=names(mzmat)=names(mztheo)=unique(integrationTable[,"name"])
+      if(!centroided)
+      {
+        ibm2=lcmsIntensityByMass(lcms,by=byCTP,agregation = "sum",rt=rt)
+        sp1 <- new("Spectrum1",intensity = ibm2$df[,"intensity"], mz =ibm2$df[,"mz"], centroided = FALSE)
+        # Uniquement valide pour le profile ! 
+        noise=estimateNoise(sp1)[1,"intensity"] 
+        peaks=pickingPeaks(ibm2$df)
+        peaks2=peaks[peaks[,"intensity"]>higherThanNoise*noise,]
+        peaks2=peaks
+      }
+      if(centroided)
+      {
+        peaks=as(lcms,"data.frame")
+        colnames(peaks)=c("file","rt","x","intensity")
+        peaks2=peaks[peaks[,"rt"]<rt[2]&peaks[,"rt"]>rt[1],]
+      }
+   
+      res=mzmat=mztheo=rt_obs=rep(NA,length(unique(integrationTable[,"name"])))
+      names(res)=names(rt_obs)=names(mzmat)=names(mztheo)=unique(integrationTable[,"name"])
       for(name_ion in unique(integrationTable[,"name"]))
       {
         line_int=integrationTable[,"name"]==name_ion
@@ -118,16 +131,57 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
           res[name_ion]=intens[,"intensity"]
           mzmat[name_ion]=intens[,"x"]
           mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
+          if(centroided)
+          {
+            rt_obs[name_ion]=intens[,"rt"]
+          }
         }
         if(dim(intens)[1]>1)
         {
-          ind_closest= which.min(abs(intens[,"x"]-integrationTable[line_int,"mz"]))
-          res[name_ion]=intens[ind_closest,"intensity"]
-          mzmat[name_ion]=intens[ind_closest,"x"]
+          rtimeObs=MSnbase::rtime(lcms)
+          #pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1])*60)
+          pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1]))
+          
+          myWhichMin=function(mz_obs,mz_theo,ppm=10,centroided=TRUE)
+          {
+            if(centroided)
+            {
+              ppm_vec=abs(mz_obs-mz_theo)/mz_theo*1e6
+              ind=ppm_vec<ppm
+            }
+            if(!centroided)
+            {
+              ind=abs(mz_obs-mz_theo)==min(abs(mz_obs-mz_theo))
+            }
+            return(ind)
+          }
+          
+            # ind_closest= which.min(abs(intens[,"x"]-integrationTable[line_int,"mz"]))
+         # res[name_ion]=intens[ind_closest,"intensity"]
+          #  mzmat[name_ion]=intens[ind_closest,"x"]
+          
+          wm=myWhichMin(mz_obs=intens[,"x"],mz_theo=integrationTable[line_int,"mz"],ppm=ppm,centroided=centroided)
+   
+          mzmat[name_ion]=mean(intens[wm,"x"],na.rm=T)
           mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
+          if(centroided)
+          {
+            rt_obs[name_ion]=mean(intens[wm,"rt"])
+            res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)*pasRtMoyen
+          }
+          else
+          {
+            res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)
+          }
+          #if(name_ion=="C42H82NO8P"){print("760");print(intens[wm,])}
+          #if(name_ion=="C46H80NO8P"){print("810");print(intens[wm,])}
+          #if(name_ion=="C44H82NO7P"){print("768");print(intens[wm,])}
+          
         }
       }
+      
       resdf=data.frame(name=names(res),theo_mz=mztheo,mz=mzmat,intensity=res) 
+      if(centroided){resdf[,"rt"]=rt_obs}
     }
   }
   #resdf=as.data.frame(resdf)
