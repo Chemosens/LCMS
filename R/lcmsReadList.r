@@ -6,16 +6,17 @@
   #'@param wideFormat If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long
   #'@inheritParams lcmsIntensityByMass
   #'@export
-  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE)
+  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,byCTP=0.001,centroided=FALSE,ppm=15)
   {
     df_mass=NULL
     listQC=listFiles
-    res=res_intensity=res_ppm=res_mz=NULL
+    res=res_intensity=res_ppm=res_rt=res_mz=NULL
     for(i in 1:length(listFiles))
     {
       print(paste0(listFiles[i]," (",i,"/",length(listFiles),")"))
       lcms=readMSData(files=listFiles[i],msLevel.=1,mode="onDisk")
-      int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks)
+      int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm)
+      
       if(wideFormat==FALSE)
       {
         dfi=data.frame(int_mass$df,namefile=listFiles[i],num=i)
@@ -29,6 +30,11 @@
         names( res_mz[[listFiles[i]]])=int_mass$df[,"name"]
         res_ppm[[listFiles[i]]]=(int_mass$df[,"mz"]-int_mass$df[,"theo_mz"])/(int_mass$df[,"theo_mz"]*1e-6)
         names( res_ppm[[listFiles[i]]])=int_mass$df[,"name"]
+        if(centroided)
+        {
+          res_rt[[listFiles[i]]]=int_mass$df[,"rt"]
+          names( res_rt[[listFiles[i]]])=int_mass$df[,"name"]
+        }
       }
     }
     
@@ -42,7 +48,13 @@
       rownames(res_mz)=listFiles
       res_ppm=Reduce(rbind,res_ppm)
       rownames(res_ppm)=listFiles
+      if(centroided)
+      {
+        res_rt=Reduce(rbind,res_rt)
+        rownames(res_rt)=listFiles
+      }
       df_mass=list(intensity=res_intensity,mz=res_mz,ppm=res_ppm)
+      if(centroided){df_mass[["rt"]]=res_rt}
     }
     
     
