@@ -1,0 +1,264 @@
+---
+title: "chemosensR package"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    fig_height: 6
+    fig_width: 6
+vignette: >
+  %\VignetteIndexEntry{chemosensR package}    %\VignetteEngine{knitr::rmarkdown} 
+  \usepackage[utf8]{inputenc}
+
+header-includes: \usepackage{amsfonts}
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+This package aims to analyze data from chemometrics and sensometrics.
+
+In sensometrics,...
+
+In chemometrics, this package allows the complete analysis of data stemming from PTR-MS devices (.h5 files) and LC or GC-MS devices(.msXML files). 
+This package depends on several other packages: MSnbase, ggplot2, plotly, stringr
+
+```{r echo=TRUE,eval=TRUE,message=FALSE,warning=FALSE}
+rm(list=ls())
+library(chemosensR)
+#library(MSnbase)
+#library(ggplot2)
+library(plotly)
+#library(stringr)
+#library(MALDIquant)
+library(gridExtra)
+#setwd("./../R")
+#r=lapply(list.files(),source)
+```
+# Chemometrics
+## General approach
+\begin{itemize}
+\item Defining the integration table
+\item Quantifying the sample according to this integration table
+\end{itemize}
+## Integration table
+### Definition
+In mass spectrometry, most of analyses are conducted based on an integration table presenting the molecules of interest with their masses and an error (in ppm 1e-6). Then, quantifications are computed according to this integration table. 
+
+The integration table is manually determined with QC samples containing all the molecules of interest (containing all samples in the same quantity). A user detects the peaks and their lower and upper limits and saves them in a table. Then, he compares to existing lipid bases to identify the peaks and names the molecules of interest. The obtained table can be read in R as following:
+
+It should have the following columns: name, mz, inf and sup. 
+
+### Loading an integration table
+
+```{r, echo=TRUE,eval=TRUE}
+setwd("C:/INRA/Data")
+integrationTable=read.csv(file="TestRetine.csv",header=TRUE,sep=";",dec=",")
+head(integrationTable)
+```
+We think that theses steps are time-consuming and potentially subject dependent. Consequently, we propose an entirely automatable method to produce integration table. This method requires existing lipid bases and the sum spectra of quality control. It consists in:
+\begin{itemize}
+\item Peak detection
+\begin{itemize}
+\item Detection of the noise (or base line) in the data
+\item Removing it
+\item Choice of the parameters required to identify a peak: a threshold and a number of points required to "be" a peak. Default 3*noise ? and 10 points ?
+\end{itemize}
+\item Zone of peak detection
+\begin{itemize}
+\item Choice of a threshold of "significance of the peak
+\end{itemize}
+\end{itemize}
+
+### Automatization of peak detection
+
+The first step is to load the quality control data.
+```{r, echo=TRUE,eval=TRUE,warning=FALSE,message=FALSE}
+setwd("../../Data")
+lcms=lcmsRead("CSBJ150009_Retine.mzXML",rt=c(400,700))
+int_mass_df=lcmsIntensityByMass(lcms,integrationTable=integrationTable)
+int_mass_df=lcmsIntensityByMass(lcms,breaks=seq(0,1300,0.1))
+int_mass_df=lcmsIntensityByMass(lcms,breaks=seq(760.56,760.60,0.001))
+p=plot(int_mass_df)
+#ggplotly(p)
+# peakSelection=peakpick(x=int_mass_df$df[,"mz"],y=int_mass_df$df[,"intensity"],ignore_threshold=0.5,span=20,removeBL=F,removeNoise=F)
+# p1=plot(peakSelection)
+# head(peakSelection$df)
+# p2= grid.arrange(p,p1,nrow=2)
+# ggplotly(p1)
+```
+
+
+## LC-MS
+
+### Loading data from one file
+```{r, echo=FALSE,eval=TRUE,warning=FALSE,message=FALSE}
+setwd("../../Data")
+# Loading data
+#lcms=readMSData(file="CSBJ150009_Retine.mzXML",msLevel=1,mode="onDisk")
+lcms=lcmsRead("CSBJ150009_Retine.mzXML",rt=c(400,700))
+
+# lcms2=filterRt(lcms,rt=c(100,200))
+# lcms=filterMz(lcms2,mz=c(100,200))
+# writeMSData(lcms,file="lcms",outformat="mzxml")
+# rm(lcms)
+# lc=load(file="lcms.Rdata",)
+#lcms=data(lcms)
+```
+### Chromatogram
+```{r, echo=TRUE,eval=TRUE,warning=FALSE,message=FALSE}
+int_time=lcmsIntensityByTime(lcms)
+head(int_time$df[[1]])
+#p1 <- plot_fullspectra(x=int_time[,"time"],y=int_time[,"intensity"],main="Chromatogram",xlab="time")
+p1 <- plot(int_time)
+ggplotly(p1)
+
+#plot(int_time)
+
+```
+
+### Mass spectra for a given period of the chromatogram
+In a selected period of time, the mass spectra can be calculated according to the integration table. 
+```{r, echo=TRUE,eval=TRUE,message=FALSE,warning=FALSE}
+int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable)
+#write.table(int_mass,file="mass.csv",row.names=F)
+head(int_mass$df)
+dim(int_mass$df)
+```
+This can be represented as:
+```{r, echo=TRUE,eval=TRUE}
+#p2 <- plot_fullspectra(x=int_mass$df[,"mz"],y=int_mass$df[,"intensity"],main="Mass spectra",type="l")
+
+p2<- plot(int_mass)
+ggplotly(p2)
+```
+
+### Heatmaps
+```{r, echo=TRUE,eval=TRUE}
+hm=lcmsHeatmap(lcms,threshold=100,timebreaks=100,massbreaks=100)
+#plot(hm)
+#p_hm=plot_lcmsHeatmap(hm,log=T,scale_limits=c(10,20),main="Heatmap")
+p_hm=plot(hm,scale_limits=c(4e5,8e8))
+ggplotly(p_hm)
+```
+
+### Read and collect data from a list of files
+In any study, the first analysis should be exploratory (what are the sources of variability of the data ?). The objective of most studies is to compare samples in different conditions (healthy subjects vs patients, samples from different origins,... ). This implies that the samples are comparable. 
+
+This chunk allows to compare different files of quality control. 
+
+#### Obtaining the chromatograms of all quality controls
+
+```{r, echo=TRUE,eval=FALSE}
+setwd("./../../Data/QCneg")
+setwd("./../../Data/C18")
+listQCneg=list.files()
+df_qneg=lcmsReadListIBT(listQCneg,rt=c(0,1500),mz=c(700,800))
+p=plot_fullspectra(x=df_qneg[,"time"],y=df_qneg[,"intensity"],group=df_qneg[,"num"],xlab="Time",xlim=c(400,550),main="Chromatogram")
+```
+
+#### Selecting a period of interest
+
+```{r, echo=TRUE,eval=FALSE}
+selectedPeriod=data.frame(inf=350,sup=800)
+p=p + geom_vline(data=selectedPeriod,aes(xintercept=inf,col="red"))
+p=p + geom_vline(data=selectedPeriod,aes(xintercept=sup,col="red"))
+ggplotly(p)
+```
+
+#### Obtaining the mass spectrum on a given period for all experiments
+
+This step can imply some normalization among the obtained mass spectra. The normalization option allows to normalize according to the height of the highest peak (normalization="max") or to the total intensity of the peaks on this window (normalization="sum")
+```{r, echo=TRUE,eval=FALSE}
+df_mass=NULL
+listQC=listQCneg
+lcneg=lcmsReadListIBM(listQCneg,integrationTable=integrationTable,rt=c(350,800),normalization="none")
+p=plot_fullspectra(x=lcneg[,"mz"],y=lcneg[,"intensity"],group=factor(lcneg[,"num"]),xlab="Mass",main="Mass spectrum",type="bar")
+p+theme(axis.text.x = element_text( angle=45))
+ggplotly(p)
+
+```
+
+#### Obtainig the means and standard deviations by ion
+
+```{r, echo=TRUE,eval=FALSE}
+stat2=stats(df_mass,integrationTable)
+p=ggplot(stat2,aes(x=name,y=mean,fill=name))+geom_col()+geom_errorbar(aes(ymin=min,ymax=max),color="black")+theme_bw()+theme(axis.text.x = element_text(hjust=1,size=8,angle=45),legend.position="none")
+p
+```
+
+
+## PTR-MS
+
+### Using .h5 files
+
+#### Loading data from one file
+
+```{r, echo=TRUE,eval=TRUE}
+library(rhdf5)
+setwd("../../Data")
+#lcms=readMSData(file="CSBJ150009_Retine.mzXML",msLevel=1,mode="onDisk")
+ptr=ptrRead(file="CSBQ056_1402_IA_1-51-1.h5")
+```
+
+#### Intensity by time for PTR
+
+```{r, echo=TRUE,eval=TRUE,message=FALSE}
+int_time=ptrIntensityByTime(ptr,integrationTable="device")
+head(int_time$df)
+p=plot(int_time,legend=FALSE,groupOption="name",xlim=c(50,100))
+ggplotly(p)
+```
+
+#### Intensity by mass for PTR
+
+```{r, echo=TRUE,eval=FALSE}
+int_mass=ptrIntensityByMass(ptr,integrationTable="device")
+head(int_mass$df)
+p=plot(int_mass)
+ggplotly(p)
+```
+
+#### Correction of respiration
+```{r eval=FALSE}
+referenceBreath="isoprene"
+total=int_time$df[int_time$df[,"name"]==referenceBreath,]
+plot(total[1:100,"time"],total[1:100,"intensity"],type="p")
+
+res=dcast(int_time$df,time~name,value.var="intensity",fun.aggregate=sum)
+res2=apply(res[,-1],1,sum)
+pick(total[,"time"],total[,"intensity"])
+
+sp <- new("Spectrum1",
+            intensity =max(total[,"intensity"])-total[,"intensity"],
+            mz = total[,"time"],
+            centroided = FALSE)
+sp2 <- pickPeaks(sp, refineMz = "none", signalPercentage = 90)   
+
+plot(total[1:300,"time"],total[1:300,"intensity"],type="l")
+for(i in 1:length(mz(sp2)))
+{
+  abline(v=mz(sp2)[i],col="red")
+}
+
+find_peaks(total[,"intensity"])
+
+```
+
+## With the txt file from ptrViewer
+
+# Sensometrics
+
+# Integrative analysis of sensometrics and chemometrics
+## Principle
+The objective is to co-analyze sensometrics and chemometrics data. The multiblock approach is used in this purpose. Regularized Generalized Canonical Correlation Analysis is a framework containing most of supervised and unsupervised multiblock approaches and will be used in this package.
+
+# Appendix
+
+
+# References

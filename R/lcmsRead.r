@@ -4,13 +4,13 @@
 #'@param mz a vector of size two indicating a range of mass to be selected
 #'@param msLevel 1 for MS1, 2 for MS2 and so on...
 #'@return a MSnExp object if integrationTable is NULL, a dataframe ifelse
-#'@export 
+#'@export
 #'@importFrom MSnbase readMSData
 #'@importFrom MSnbase filterRt
 #'@importFrom MSnbase filterMz
 #'@examples
 #' #  DO NOT RUN
-#' #  file <- dir(system.file(package = "chemosensR", dir = "extdata"),full.name=TRUE,pattern="mzXML$")
+#' #  file <- dir(system.file(package = "LCMS", dir = "extdata"),full.name=TRUE,pattern="mzXML$")
 #' # lcms=lcmsRead(file)
 lcmsRead=function(file,rt=NULL,mz=NULL,msLevel=1)
 {

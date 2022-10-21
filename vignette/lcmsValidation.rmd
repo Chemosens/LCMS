@@ -1,0 +1,385 @@
+---
+title: "Checkings for chemosensR package"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    fig_height: 6
+    fig_width: 6
+vignette: >
+  %\VignetteIndexEntry{chemosensR package}    %\VignetteEngine{knitr::rmarkdown} 
+  \usepackage[utf8]{inputenc}
+
+header-includes: \usepackage{amsfonts}
+---
+
+# Loading one retina and the pickingPeaks function
+```{r message=FALSE, warning=FALSE}
+library(LCMS)
+library(MSnbase)
+library(plotly)
+library(ggplot2)
+rm(list=ls())
+getIntegratedData=function(file,rt=c(7.30*60,8.41*60),integrationTableSpe)
+{
+  lcms=lcmsRead(file=file, msLevel=1)
+  ibm2=lcmsIntensityByMass(lcms,by=0.001,agregation = "sum",rt=rt)
+  sp1 <- new("Spectrum1",intensity = ibm2$df[,"intensity"], mz =ibm2$df[,"mz"], centroided = FALSE)
+  noise=estimateNoise(sp1)[1,"intensity"] 
+  peaks=pickingPeaks(ibm2$df)
+  peaks2=peaks[peaks[,"intensity"]>10*noise,]
+  
+  res=mzmat=rep(NA,length(unique(integrationTableSpe[,"name"])))
+  names(res)=names(mzmat)=unique(integrationTableSpe[,"name"])
+  for(name_ion in unique(integrationTableSpe[,"name"]))
+  {
+    line_int=integrationTableSpe[,"name"]==name_ion
+    intens=peaks2[peaks2[,"x"]< integrationTableSpe[line_int,"sup"]&peaks2[,"x"]>integrationTableSpe[line_int,"inf"],]
+    if(dim(intens)[1]==1)
+    {
+      res[name_ion]=intens[,"intensity"]
+      mzmat[name_ion]=intens[,"x"]
+    }
+    if(dim(intens)[1]>1)
+    {
+      ind_closest= which.min(abs(intens[,"x"]-integrationTableSpe[line_int,"mz"]))
+      res[name_ion]=intens[ind_closest,"intensity"]
+      mzmat[name_ion]=intens[ind_closest,"x"]
+    }
+  }
+  return(list(res=res,mz=mzmat))
+}
+#'@export
+getIntensity=function(listFiles,rt=c(6*60,9*60),integrationTable)
+{
+  result=list()
+  for(i in 1:length(listFiles))
+  {
+    name=listFiles[i]
+    print(name)
+    result[[name]]=getIntegratedData(file=name,rt=rt,integrationTableSpe=integrationTable)$res
+  }
+  res=Reduce(rbind,result)
+  rownames(res)=listFiles
+  return(res)  
+}
+setwd("C:/INRA/Data")
+listRetina=c("Ret_CSBJ150009_P1806_Pos.mzXML")
+lcms=readMSData(files=listRetina, msLevel.=1,mode="onDisk")
+```
+
+This command gives the same results as the following runs
+```{r eval=FALSE}
+lcmsCentroidT=readMSData(files=listRetina,centroided=TRUE, msLevel.=1,mode="onDisk")
+lcmsCentroidNA=readMSData(files=listRetina,centroided=NA, msLevel.=1,mode="onDisk")
+```
+
+# Comparing the chromatograms
+
+```{r}
+ibt=lcmsIntensityByTime(lcms,timeUnits = "min")
+```
+
+Le pic max doit etre à 7.89 et les pics suivants sont 0.29, 6.21 et et 5.83 dans cet ordre
+```{r fig.width=10, fig.height=4}
+ggplotly(plot(ibt))
+```
+![test](./img/chromato0.png)
+
+## Visual comparison for this zone
+
+```{r fig.width=10, fig.height=4}
+ibmTotal=lcmsIntensityByMass(lcms,by=0.001,agregation = "sum",rt=c(1,600))
+ggplotly(plot(ibmTotal))
+```
+
+
+# Checking the intensities 
+
+## First example
+### Plotting spectra
+
+```{r}
+ibm=lcmsIntensityByMass(lcms,by=0.001,agregation = "sum",rt=c(4.19*60,8.86*60))
+p1m=plot(ibm)
+ggplotly(p1m)
+```
+
+### Getting peak table with MSnbase and pickingPeaks
+
+```{r fig.width=10, fig.height=4}
+df2=pickingPeaks(ibm$df)
+head(df2)
+```
+![test](./img/chromato1.png)
+### Recovering the intensity with another R function
+We obtained the same results with two different functions (ggmisc:::find_peaks)
+```{r eval=FALSE}
+picpic=peakpick(x=ibm$df[,"mz"],y=ibm$df[,"intensity"],span=1000,ignore_threshold=0.5,removeNoise=F,removeBL=F)
+head(picpic$df[order(picpic$df[,"intensity"],decreasing=T),])
+df2=picpic$df[order(picpic$df[,"intensity"],decreasing=T),]
+df2[,"intensity"]=df2[,"intensity"]*100/max(df2[,"intensity"])
+head(df2,10)
+```
+### Recovering the intensity by a manual calculation
+
+```{r}
+max(ibm$df[ibm$df[,"mz"]>760.58 & ibm$df[,"mz"]<760.59,"intensity"])
+4239675/2
+p1m=plot(ibm,xlim=c(760.58,760.59))
+ggplotly(p1m)
+```
+
+#### On the peak defined by half of the height
+```{r}
+sum(ibm$df[ibm$df[,"mz"]>760.5841 & ibm$df[,"mz"]<760.5858,"intensity"])
+```
+
+#### On the peak defined by the basis of the peak
+```{r}
+sum(ibm$df[ibm$df[,"mz"]>760.58 & ibm$df[,"mz"]<760.59,"intensity"])
+```
+
+## Second Example
+
+### Calculation with pickingPeaks
+```{r warning=FALSE, message=FALSE}
+ibm2=lcmsIntensityByMass(lcms,agregation = "none",rt=c(0.13*60,10.49*60),mz=c(760.58,760.59))
+```
+
+```{r}
+p1m=plot(ibm2)
+ggplotly(p1m)
+```
+
+```{r fig.width=10, fig.height=4}
+df2=pickingPeaks(ibm2$df)
+head(df2)
+```
+![test](./img/chromato2.png)
+### Recovering the intensity by a manual calculation
+
+```{r}
+max(ibm2$df[ibm2$df[,"mz"]>760.58 & ibm2$df[,"mz"]<760.59,"intensity"])
+4241148/2
+p1m=plot(ibm2,xlim=c(760.58,760.59))
+ggplotly(p1m)
+```
+
+#### On the peak defined by half of the height
+```{r}
+sum(ibm2$df[ibm2$df[,"mz"]>760.5845 & ibm2$df[,"mz"]<760.5855,"intensity"])
+```
+
+#### On the peak defined by the basis of the peak
+```{r}
+sum(ibm$df[ibm$df[,"mz"]>760.58 & ibm$df[,"mz"]<760.59,"intensity"])
+```
+
+# A final zone
+
+```{r}
+ibm2=lcmsIntensityByMass(lcms,by=0.001,agregation = "sum",rt=c(7.30*60,8.41*60))
+```
+
+```{r}
+p1m=plot(ibm2)
+ggplotly(p1m)
+```
+
+```{r fig.width=10, fig.height=4}
+listPeaks=pickingPeaks(ibm2$df)
+head(listPeaks)
+```
+![test](./img/chromato2.png)
+
+# Study of the mz distribution according to rt
+
+Let's focus on a specific zone.
+
+```{r warnig=FALSE,message=FALSE}
+lcms2=lcms%>%filterRt(c(0.13*60,10.49*60))%>%filterMz(c(760.58,760.59))
+
+lcms_df=as(lcms2,"data.frame")
+
+p=ggplot(lcms_df,aes(x=rt,y=mz,col=log(i)))+geom_point(size=0.5)+scale_color_continuous(type="gradient")+theme_bw()
+
+ggplotly(p)
+```
+
+We see that all the mz values are not selected.The time is in seconds
+
+
+```{r warning=FALSE,message=FALSE}
+lcms2=lcms%>%filterRt(c(4*60,8.5*60))%>%filterMz(c(760.57,760.59))
+lcms_df=as(lcms2,"data.frame")
+
+lcms_df[order(lcms_df[,"mz"]),]
+
+p=ggplot(lcms_df,aes(x=rt,y=mz,col=log(i)))+geom_point(size=0.5)+scale_color_continuous(type="gradient")+theme_bw()
+
+ggplotly(p)
+```
+
+
+
+```{r, eval=FALSE}
+setwd("C:/INRA/Data/Liste Retines HILIC/")
+file=c("CSBJ150009.mzXML")
+
+integrationTable=read.table("C:/INRA/Data/Total ion list.csv",sep=";",dec=",",header=T)
+integrationTable2=integrationTable[!is.na(integrationTable[,"Exact.mass"]),1:4]
+colnames(integrationTable2)=c("class","compo","name","mz")
+
+# Choosing a class (PC)
+integrationTablePC=integrationTable2[integrationTable2[,"class"]=="PC",]
+
+# Choosing a mz ratio
+integrationTablePC[,"inf"]=integrationTablePC[,"mz"]-0.1
+integrationTablePC[,"sup"]=integrationTablePC[,"mz"]+0.1
+
+retine1=getIntegratedData(file=file,rt=c(7.30*60,8.41*60),integrationTableSpe=integrationTablePC)
+
+setwd("C:/INRA/Data/Liste GBR HILIC (mzXML)/")
+t0=Sys.time()
+listFiles=list.files()
+listFilesNeg=listFiles[ substr(listFiles,22,24)=="Neg"]
+listFilesPos=listFiles[ substr(listFiles,22,24)=="Pos"]
+
+resultGBRNeg=list()
+for(i in 1:length(listFilesNeg))
+{
+  name=listFilesNeg[i]
+  print(name)
+  resultGBRNeg[[name]]=getIntegratedData(file=name,rt=c(6*60,9*60),integrationTableSpe=integrationTablePC)$res
+}
+t1=Sys.time()
+t1-t0
+res=Reduce(rbind,resultGBRNeg)
+rownames(res)=listFilesNeg
+
+
+
+registerDoParallel(cores = detectCores())
+listFiles=list.files()
+nboot=length(listFiles)
+sortie <- foreach(icount(nboot), .combine='rbind') %dopar% {
+  
+  
+  #### mettre ce que tu veux que ça fasse
+ 
+  
+  return(toto) ### bien penser à mettre le return
+}
+
+
+
+
+
+
+
+```
+
+# Comparison with the manual approach
+## Loading data for comparison
+### Loading PC integration table and manual reference results
+```{r}
+setwd("C:/Users/capeltier/Desktop/DataAnalysis/PhD Glenda/210518 analysis/computedDatasets")
+refLcms=read.csv("refLcms.csv",sep=";",dec=",")
+```
+### Loading our results with PC integration table
+```{r warning=FALSE, message=FALSE}
+integrationTable=read.table("C:/INRA/Data/Total ion list.csv",sep=";",dec=",",header=T)
+integrationTable2=integrationTable[!is.na(integrationTable[,"Exact.mass"]),1:4]
+colnames(integrationTable2)=c("class","compo","name","mz")
+# Choosing a class (PC)
+class="PC"
+integrationTablePC=integrationTable2[integrationTable2[,"class"]==class,]
+# Choosing a mz ratio
+integrationTablePC[,"inf"]=integrationTablePC[,"mz"]-0.1
+integrationTablePC[,"sup"]=integrationTablePC[,"mz"]+0.1
+
+library(chemosensR)
+library(MSnbase)
+setwd("C:/INRA/Data/Liste Retines HILIC (mzXML)/")
+listFiles=c("Ret_CSBJ150032_P1903_Pos.mzXML","Ret_CSBJ150034_P1933_Pos.mzXML","Ret_CSBJ150036_P2072_Pos.mzXML","Ret_CSBJ150038_P2073_Pos.mzXML")
+mode="Pos"
+#intPC=getIntensity(listFiles=listFiles,rt=c(9.5*60,12*60),integrationTable=integrationTablePC)
+
+#intPC=getIntensity(listFiles=listFiles,rt=c(9*60,12.5*60),integrationTable=integrationTablePC)
+
+#intPC=getIntensity(listFiles=listFiles,rt=c(6*60,9*60),integrationTable=integrationTablePC)
+
+ intPC=lcmsReadListIBM(listFiles=listFiles,rt=c(9*60,12*60),integrationTable=integrationTablePC,comparisonToPeaks=TRUE,wideFormat=TRUE)
+```
+## Loading manual reference results
+```{r}
+ # Reordering the obtained dataset
+#vec=rep(NA,length(refLcms[,1]))
+intPC[1,]
+indf=c(1:7,12:15,19,20,22,26:30,32,35,36,38:41,43,45:47,49:51,53,55,57:60,62:63,65:67,69:71,73:94)+1
+#toselec=ezqtmo[indf,"mz"]
+#vec[1:length(toselec)]=toselec
+#cbind(vec,refLcms[,1])
+intPCt=as.data.frame(t(intPC))
+intPCt[1,]
+intPCt[,"name"]=rownames(intPCt)
+intPC_merged=merge(intPCt,integrationTablePC)
+intPC_merged_ordered=intPC_merged[order(intPC_merged[,"mz"]),]
+intPC_merged_ordered[1,]
+```
+# Comparison 
+## Comparison on the raw values
+### Graphical outputs
+```{r}
+res=rbind(cbind(intPC_merged_ordered[indf,2],refLcms[,2],rep(1,length(refLcms[,2]))),cbind(intPC_merged_ordered[indf,3],refLcms[,3],rep(2,length(refLcms[,3]))),cbind(intPC_merged_ordered[indf,4],refLcms[,4],rep(3,length(refLcms[,4]))),cbind(intPC_merged_ordered[indf,5],refLcms[,5],rep(4,length(refLcms[,5]))))
+head(res)
+colnames(res)=c("chemosensR","manual","sample")
+resdf=as.data.frame(res)
+resdf[,"sample"]=factor(resdf[,"sample"])
+p=ggplot(data=resdf,aes(x=chemosensR,y=manual,group=sample,col=sample))+geom_point()
+ggplotly(p)
+```
+
+### Correlations
+
+```{r}
+method="spearman"
+cor(intPC_merged_ordered[indf,2],refLcms[,2],method=method)
+cor(intPC_merged_ordered[indf,3],refLcms[,3],method=method)
+cor(intPC_merged_ordered[indf,4],refLcms[,4],method=method)
+cor(intPC_merged_ordered[indf,5],refLcms[,5],method=method)
+```
+
+## Comparison on the log values
+
+### Graphical output
+
+```{r}
+resdf[,"chemosensR_log"]=log(resdf[,"chemosensR"]+1)
+resdf[,"manual_log"]=log(resdf[,"manual"]+1)
+p=ggplot(data=resdf,aes(x=chemosensR_log,y=manual_log,group=sample,col=sample))+geom_point()
+ggplotly(p)
+```
+
+Some points are clearly out the line. These differences are due to the selection of a window between 9.5 and 12. Higher intervals were manually selected, and some peaks were consequently taken into account. Some other are NULL with manual method (they were not detected). The other are well aligned.
+
+```{r}
+lcms=lcmsRead("C:/INRA/Data/Liste Retines HILIC (mzXML)/Ret_CSBJ150036_P2072_Pos.mzXML")
+ibt=lcmsIntensityByTime(lcms,mz=c(814.45,814.6))
+ggplotly(plot(ibt))
+```
+
+### Correlations
+```{r}
+cor(log(resdf[,"chemosensR_log"]+1),log(resdf[,"manual_log"]+1),method="pearson")
+
+```
+
+
+
+
