@@ -9,6 +9,11 @@
 #' @param spar 0 by default. Smoothing parameter between 0 (no smoothing) and 1
 #' @param agregation "none" "sum" or "mean". 
 #' @param comparisonToPeaks If TRUE, the intensity value is the one of the closest mass peak contained in the integration table limits
+#' @param limitIntegration 0.1 by default: window where to research peaks for each ion of integrationTable
+#' @param higherThanNoise select only peaks which are  higherThanNoise times higher than the noise
+#' @param byCTP intervall in mass for the sum in profile mode
+#' @param centroided TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.
+#' @param ppm select the peak with the minimal distance within the ppm distance. 
 #' @return an ibm object containing a data.frame (accessible by ibmObject[[1]])
 #'@export
 #'@importFrom data.table data.table
@@ -18,10 +23,22 @@
 #' #head(int_mass)
 #'@importFrom MSnbase filterRt rtime
 #'@importFrom MSnbase estimateNoise
-lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,byCTP=0.001,centroided=FALSE,ppm=15)
-{ name=NULL
-print("lcms by mass")
-  
+lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
+{ 
+  name=NULL
+  myWhichMin=function(mz_obs,mz_theo,ppm,centroided=centroided)
+  {
+    if(centroided)
+    {
+      ppm_vec=(abs(mz_obs-mz_theo)/mz_theo)*1e6
+      ind=ppm_vec<ppm
+    }
+    if(!centroided)
+    {
+      ind=abs(mz_obs-mz_theo)==min(abs(mz_obs-mz_theo))
+    }
+    return(ind)
+  }
   if(!is.null(rt))
   {
      lcms=filterRt(lcms,rt)
@@ -35,7 +52,6 @@ print("lcms by mass")
   if(is.null(integrationTable))
   { 
     lcms_df=as(lcms,"data.frame")
- 
     if(is.null(breaks))
     {
       mi=min(lcms_df[,"mz"])
@@ -58,32 +74,21 @@ print("lcms by mass")
         
       resdf=as.data.frame(resdf)
       resdf=resdf[!is.na(resdf[,"name"]),c("mz","int","name")]
-      # resdf[,"mz"]=as.numeric(as.character(resdf[,"mz"]))
-      #resdf2=aggregate(lcms_df[,"i"],by=list(massbreaks),FUN=sum)
-
-      #df=(mz=m)
-      #resdt=data.table()
-      #colnames(resdf)=c("mz","int")
-      #resdf[,"mass"]=NA
-      #for(i in 1:nrow(resdf))
-      #{
-      #  chaine_char=str_split(resdf[i,"mz"],",",simplify=T)[1]
-      #  resdf[i,"mass"]=as.numeric(substr(chaine_char,2,nchar(chaine_char)))
-      #}
       colnames(resdf)=c("mz","intensity","name")
   }
   if(!is.null(integrationTable))
   {
+    integrationTable[,"inf"]=integrationTable[,"mz"]-limitIntegration;
+    integrationTable[,"sup"]=integrationTable[,"mz"]+limitIntegration;
     if(!comparisonToPeaks)
     {
       lcms_df=as(lcms,"data.frame")
       resdf=NULL
       for(i in 1:dim(integrationTable)[1])
       { 
-        #print(paste0(i,"/",dim(integrationTable)[1]))
-        MassAxis=lcms_df[,"mz"]
+         MassAxis=lcms_df[,"mz"]
         masses_label=
-          MassAxis>=integrationTable[i,"inf"] &MassAxis<=integrationTable[i,"sup"]
+        MassAxis>=integrationTable[i,"inf"] &MassAxis<=integrationTable[i,"sup"]
         
         dfSubset=lcms_df[masses_label,]
         if(agregation=="sum")
@@ -119,7 +124,6 @@ print("lcms by mass")
         colnames(peaks)=c("file","rt","x","intensity")
         peaks2=peaks[peaks[,"rt"]<rt[2]&peaks[,"rt"]>rt[1],]
       }
-   
       res=mzmat=mztheo=rt_obs=rep(NA,length(unique(integrationTable[,"name"])))
       names(res)=names(rt_obs)=names(mzmat)=names(mztheo)=unique(integrationTable[,"name"])
       for(name_ion in unique(integrationTable[,"name"]))
@@ -139,29 +143,8 @@ print("lcms by mass")
         if(dim(intens)[1]>1)
         {
           rtimeObs=MSnbase::rtime(lcms)
-          #pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1])*60)
           pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1]))
-          
-          myWhichMin=function(mz_obs,mz_theo,ppm=10,centroided=TRUE)
-          {
-            if(centroided)
-            {
-              ppm_vec=abs(mz_obs-mz_theo)/mz_theo*1e6
-              ind=ppm_vec<ppm
-            }
-            if(!centroided)
-            {
-              ind=abs(mz_obs-mz_theo)==min(abs(mz_obs-mz_theo))
-            }
-            return(ind)
-          }
-          
-            # ind_closest= which.min(abs(intens[,"x"]-integrationTable[line_int,"mz"]))
-         # res[name_ion]=intens[ind_closest,"intensity"]
-          #  mzmat[name_ion]=intens[ind_closest,"x"]
-          
           wm=myWhichMin(mz_obs=intens[,"x"],mz_theo=integrationTable[line_int,"mz"],ppm=ppm,centroided=centroided)
-   
           mzmat[name_ion]=mean(intens[wm,"x"],na.rm=T)
           mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
           if(centroided)
@@ -173,10 +156,6 @@ print("lcms by mass")
           {
             res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)
           }
-          #if(name_ion=="C42H82NO8P"){print("760");print(intens[wm,])}
-          #if(name_ion=="C46H80NO8P"){print("810");print(intens[wm,])}
-          #if(name_ion=="C44H82NO7P"){print("768");print(intens[wm,])}
-          
         }
       }
       
@@ -201,7 +180,6 @@ print("lcms by mass")
     resdf=data.frame(mz=lcms_df[,"mz"],intensity=lcms_df[,"i"],name=as.character(lcms_df[,"mz"]))
   }
   ibm=list(df=resdf)
-  #res=list(df=df)
   class(ibm)<-"ibm"
   return(ibm)  
 }

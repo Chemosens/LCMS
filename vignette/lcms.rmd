@@ -1,0 +1,75 @@
+
+
+---
+  title: LCMSR package
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+   number_sections: yes
+toc: yes
+fig_height: 6
+fig_width: 6
+html_document:
+  toc: yes
+df_print: paged
+vignette: |
+  
+  %\VignetteIndexEntry{LCMS} %\VignetteEngine{knitr::rmarkdown} \usepackage[utf8]{inputenc}
+
+header-includes:
+  - \usepackage{amsfonts}
+- \usepackage{algorithm2e}
+- \usepackage{times}
+- \usepackage{bm}
+- \usepackage{soul}
+- \usepackage{epsfig}
+- \usepackage{amssymb}
+- \usepackage{natbib}
+- \usepackage{lscape}
+- \usepackage{graphicx}
+- \usepackage{tikz}
+- \usetikzlibrary{arrows}
+- \usepackage{amsmath}
+- \usepackage{color}
+- \usepackage{float}
+- \usepackage{amsfonts}
+- \usepackage{latexsym}
+- \usepackage{graphicx,psfrag,color}
+- \usepackage{amsmath,amssymb}
+- \usepackage{multirow}
+- \usepackage{amsthm}
+- \usepackage{enumerate}
+- \usepackage{enumitem}
+- \usepackage{setspace}
+- \usepackage{subfigure}
+- \usepackage{longtable}
+- \usepackage{etoolbox}
+- \usepackage{pdfpages}
+- \usepackage[mathscr]{euscript}
+- \usepackage[T1]{fontenc}
+- \usepackage[english]{babel}
+- \usepackage[misc]{ifsym}
+- \usepackage{wasysym}
+- \usepackage{hyperref}
+- \usepackage{breakurl}
+- \usepackage{pgfplots}
+- \usepackage{microtype}
+bibliography: biblio.bib
+
+---
+  
+
+      
+      
+      \bibliographystyle{apalike}
+      
+      \bibliography{biblio}
+      
+      
+      
+      ```{r setup, include=FALSE}
+      
+      knitr::opts_chunk$set(echo = TRUE, fig.width = 10, fig.height = 10)
+      
+      ```
+      
