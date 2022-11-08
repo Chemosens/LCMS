@@ -79,6 +79,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),type="BL",output="int",inte
       p=ggplot(castedres, aes(x=sample,y=intensity,fill=compo,group=sample,name=name))+geom_col() +theme_bw()+ theme(axis.text.x = element_text( angle=45,hjust=1))+scale_color_manual(values=colors)
     }  
     list_p[[classe]]=p
+    print(p)
     insertPlot(wb, sheet=classe, width = 10, height = 7, fileType = "png", units = "in",startRow=nrow(x2)+40,startCol=1)
     conditionalFormatting(wb=wb,sheet=classe,cols=which(colnames(x2)=="CV"),rows=2:(nrow(x2)+1),style=styleRed,type="expression",rule="> 30")
     if("std" %in% not_samples)

@@ -1,75 +1,90 @@
-
-
 ---
-  title: LCMSR package
-date: "`r Sys.Date()`"
-output:
-  pdf_document:
-   number_sections: yes
-toc: yes
-fig_height: 6
-fig_width: 6
-html_document:
-  toc: yes
-df_print: paged
-vignette: |
-  
-  %\VignetteIndexEntry{LCMS} %\VignetteEngine{knitr::rmarkdown} \usepackage[utf8]{inputenc}
-
-header-includes:
-  - \usepackage{amsfonts}
-- \usepackage{algorithm2e}
-- \usepackage{times}
-- \usepackage{bm}
-- \usepackage{soul}
-- \usepackage{epsfig}
-- \usepackage{amssymb}
-- \usepackage{natbib}
-- \usepackage{lscape}
-- \usepackage{graphicx}
-- \usepackage{tikz}
-- \usetikzlibrary{arrows}
-- \usepackage{amsmath}
-- \usepackage{color}
-- \usepackage{float}
-- \usepackage{amsfonts}
-- \usepackage{latexsym}
-- \usepackage{graphicx,psfrag,color}
-- \usepackage{amsmath,amssymb}
-- \usepackage{multirow}
-- \usepackage{amsthm}
-- \usepackage{enumerate}
-- \usepackage{enumitem}
-- \usepackage{setspace}
-- \usepackage{subfigure}
-- \usepackage{longtable}
-- \usepackage{etoolbox}
-- \usepackage{pdfpages}
-- \usepackage[mathscr]{euscript}
-- \usepackage[T1]{fontenc}
-- \usepackage[english]{babel}
-- \usepackage[misc]{ifsym}
-- \usepackage{wasysym}
-- \usepackage{hyperref}
-- \usepackage{breakurl}
-- \usepackage{pgfplots}
-- \usepackage{microtype}
-bibliography: biblio.bib
-
+title: "LCMS package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{LCMS package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-  
 
-      
-      
-      \bibliographystyle{apalike}
-      
-      \bibliography{biblio}
-      
-      
-      
-      ```{r setup, include=FALSE}
-      
-      knitr::opts_chunk$set(echo = TRUE, fig.width = 10, fig.height = 10)
-      
-      ```
-      
+This vignette aims to describe how to analyse semi-targeted data in lipid analysis. 
+
+### Preliminar remarks
+
+The data should be obtained as .raw files. These data should be converted in .mzXML
+(via MSConvert for example). 
+
+The analysis requires three imputs: 
+
+* the .mzXML files stemming from the raw data
+* an integrationTable containing all the species to be targeted
+*  a classTable indicating for each class the minimal and maximal retention time
+
+
+Note: the integrationTable has to vary according to the mode of acquisition (positive or negative). It contains several columns: name (name of the species); compo (composition); class ( lipid class) and mz (theoretical m/z ratio to be detected)
+
+The objective of semi-targeted analysis is to automatize the calculation of the intensity of a list of molecules (in integrationTable)
+A directory where all the produced files will be saved is mandatory. 
+
+### Entering parameters of interest
+
+The following parameters should be entered
+ 
+``` {r, echo =TRUE, eval=FALSE}
+repoData="E:/ROCOR/Meibum_221108/xml/NEG" # repository containing the .mzXML files
+reposave="E:/ROCOR/Meibum_221108/dataAnalysis/NEG" # repository where the results are saved
+centroided=FALSE #are the data acquired in centroid mode ?
+ppmThreshold=ppm=15 # ppm limit
+files=list.files(repoData) # list of file names to be analyzed
+integrationTablePath="E:/ROCOR/Meibum_221108/20221108_IonsTable_Neg.xlsx"
+classTablePath="E:/ROCOR/Meibum_221108/20221108_RT_Neg.xlsx"
+nameFileExcel="excelResults.xlsx" # name of the file containing the results
+output="int" # could also be "pct"
+```
+
+### Reading the integration table
+
+The integration table and class table are red
+``` {r, echo = TRUE,eval=FALSE}
+integrationTable=read.xlsx(integrationTablePath)
+colnames(integrationTable)=c("class","name","compo","mz")
+classTable=read.xlsx(classTablePath)
+``` 
+
+### Checking the integration table
+
+This command allows to check that no duplicate exist in the integrationTable
+
+``` {r, echo = TRUE,eval=FALSE}
+checkingIntegrationTable(integrationTable,duplicatedName="name")
+```
+
+### Checking the class table
+
+ Are the class table and the integration table containing the same class names ?
+ 
+``` {r, echo = TRUE,eval=FALSE}
+checkingClassTable(integrationTable=integrationTable,classTable=classTable)
+```
+
+### Calculating the intensities in R
+
+ Let's calculate the intensity for all files in R. The result is a list of tables containing all intensities.
+ 
+``` {r, echo = TRUE,eval=FALSE}
+res=calculateIntensity(repoData=repoData,files=files,integrationTable=integrationTable,classTable=classTable,centroided=centroided,ppmThreshold = ppmThreshold,ppm=ppm)
+```
+
+### Saving all these files in .csv files
+
+Let's save same in a specific repository
+
+``` {r, echo = TRUE,eval=FALSE}
+getCsvOfIntensity(res, reposave=reposave)
+```
+
+### Compiling all the .csv files to obtain a final excel file of results
+ Let's obtain an excel file with all the results
+``` {r, echo = TRUE,eval=FALSE}
+excel=getExcelOfIntensity(reposave,nameFile=nameFileExcel,output=output)
+```
