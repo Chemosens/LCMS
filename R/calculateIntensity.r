@@ -1,6 +1,7 @@
+#' calculateIntensity
 #'@export
-#'@inheritParams lcmsReadList
-calculateIntensity=function(repoData=repoData,files,integrationTable=integrationTable,classTable,nameFile="BL.xlsx",centroided=T,ppmThreshold=10,ppm=10,limitIntegration=0.1)
+#'@inheritParams lcmsReadListIBM
+calculateIntensity=function(repoData=repoData,files,integrationTable=integrationTable,classTable,nameFile="BL.xlsx",centroided=T,ppmThreshold=10,ppm=10,limitIntegration=0.1,repo="")
 {
   res=list()
   for(i in 1:dim(classTable)[1])

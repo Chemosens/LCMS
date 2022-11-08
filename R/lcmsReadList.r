@@ -6,7 +6,7 @@
   #'@param wideFormat If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long
   #'@inheritParams lcmsIntensityByMass
   #'@export
-  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
+  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1,repo="")
   {
     df_mass=NULL
     listQC=listFiles
@@ -14,8 +14,12 @@
     for(i in 1:length(listFiles))
     {
       print(paste0(listFiles[i]," (",i,"/",length(listFiles),")"))
-      lcms=readMSData(files=listFiles[i],msLevel.=1,mode="onDisk")
-      int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm,limitIntegration=limitIntegration)
+      if(repo!="")
+      {
+        lcms=readMSData(files=paste0(repo,"/",listFiles[i]),msLevel.=1,mode="onDisk")
+      }
+      if(repo==""){ lcms=readMSData(files=listFiles[i],msLevel.=1,mode="onDisk")}
+       int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm,limitIntegration=limitIntegration)
       
       if(wideFormat==FALSE)
       {
