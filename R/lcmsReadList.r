@@ -6,7 +6,7 @@
   #'@param wideFormat If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long
   #'@inheritParams lcmsIntensityByMass
   #'@export
-  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,byCTP=0.001,centroided=FALSE,ppm=15)
+  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
   {
     df_mass=NULL
     listQC=listFiles
@@ -15,7 +15,7 @@
     {
       print(paste0(listFiles[i]," (",i,"/",length(listFiles),")"))
       lcms=readMSData(files=listFiles[i],msLevel.=1,mode="onDisk")
-      int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm)
+      int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm,limitIntegration=limitIntegration)
       
       if(wideFormat==FALSE)
       {
@@ -41,18 +41,37 @@
     
     if(wideFormat==TRUE&!is.null(integrationTable))
     {
-      print("in")
-      res_intensity=Reduce(rbind,res_intensity)
-      rownames(res_intensity)=listFiles
-      res_mz=Reduce(rbind,res_mz)
-      rownames(res_mz)=listFiles
-      res_ppm=Reduce(rbind,res_ppm)
-      rownames(res_ppm)=listFiles
-      if(centroided)
+      if(length(listFiles)==1)
       {
-        res_rt=Reduce(rbind,res_rt)
-        rownames(res_rt)=listFiles
+
+        res_intensity=t(as.matrix(x=res_intensity[[listFiles[1]]],ncol=1))
+        rownames(res_intensity)=listFiles
+        res_mz=t(as.matrix(x=res_mz[[listFiles[1]]],ncol=1))
+        rownames(res_mz)=listFiles
+        res_ppm=t(as.matrix(x=res_ppm[[listFiles[1]]],ncol=1))
+        rownames(res_ppm)=listFiles
+        if(centroided)
+        {
+          res_rt=t(as.matrix(x=res_rt[[listFiles[1]]],ncol=1))
+          rownames(res_rt)=listFiles
+        }
+        
       }
+      if(length(listFiles)>1)
+      {
+        res_intensity=Reduce(rbind,res_intensity)
+        rownames(res_intensity)=listFiles
+        res_mz=Reduce(rbind,res_mz)
+        rownames(res_mz)=listFiles
+        res_ppm=Reduce(rbind,res_ppm)
+        rownames(res_ppm)=listFiles
+        if(centroided)
+        {
+          res_rt=Reduce(rbind,res_rt)
+          rownames(res_rt)=listFiles
+        }
+      }
+     
       df_mass=list(intensity=res_intensity,mz=res_mz,ppm=res_ppm)
       if(centroided){df_mass[["rt"]]=res_rt}
     }
