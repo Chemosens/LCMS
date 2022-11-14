@@ -4,10 +4,11 @@
 # Loading libraries
 library(openxlsx)
 library(LCMS)
-library(plotly)
+
 library(ggplot2)
+library(testthat)
 
-
+print(getwd())
 comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML")
 {
   wb_auto=loadWorkbook(name_auto)
@@ -55,10 +56,10 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
   
   return(list(p=p,correlationLog=correlationLog,correlation=correlation, df=df,df_log=df_log,p_log=p_log))
 }
-originalRepo=getwd()
-reposave="C:/Users/CalculCaro/Desktop/Rpackages/savedFilesForTest2"
-repoData="C:/Users/CalculCaro/Desktop/Rpackages/LCMS/extdata"
-setwd(repoData)
+#originalRepo=getwd()
+reposave="./../../tmp/correlation"
+repoData="./../../extdata"
+#setwd(repoData)
 listFiles=c("CSCQ131011.mzXML","CSCQ131012.mzXML")
 
 # Integration Table
@@ -77,18 +78,18 @@ getCsvOfIntensity(res, reposave=reposave)
 getExcelOfIntensity(reposave,nameFile="ResForTest.xlsx",output="int")
 
 #Comparison
-name_auto="C:/Users/CalculCaro/Desktop/Rpackages/savedFilesForTest2/ResForTest.xlsx"
+name_auto=paste0(reposave,"/ResForTest.xlsx")
 name_manu=paste0(repoData,"/manuel_pos_ionsMOD16092022.xlsx")
 resComp=comparaisonXlsx(name_auto=name_auto,name_manu=name_manu)
 
 resComp$p
 resComp$p_log
-ggplotly(resComp$p)
-ggplotly(resComp$p_log)
+#ggplotly(resComp$p)
+#ggplotly(resComp$p_log)
 
 resComp$correlation
 resComp$correlationLog
 
-testthat('correlation higher than 0.97',{expect_true(resComp$correlation>0.97)})
-testthat('correlation log higher than 0.99',{expect_true(resComp$correlationLog>0.996)})
-setwd(originalRepo)
+test_that('correlation higher than 0.97',{expect_true(resComp$correlation>0.97)})
+test_that('correlation log higher than 0.99',{expect_true(resComp$correlationLog>0.996)})
+#setwd(originalRepo)
