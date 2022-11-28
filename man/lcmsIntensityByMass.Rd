@@ -14,7 +14,12 @@ lcmsIntensityByMass(
   normalization = "none",
   spar = 0,
   agregation = "sum",
-  comparisonToPeaks = FALSE
+  comparisonToPeaks = FALSE,
+  higherThanNoise = 10,
+  byCTP = 0.001,
+  centroided = FALSE,
+  ppm = 15,
+  limitIntegration = 0.1
 )
 }
 \arguments{
@@ -37,6 +42,16 @@ lcmsIntensityByMass(
 \item{agregation}{"none" "sum" or "mean".}
 
 \item{comparisonToPeaks}{If TRUE, the intensity value is the one of the closest mass peak contained in the integration table limits}
+
+\item{higherThanNoise}{select only peaks which are  higherThanNoise times higher than the noise}
+
+\item{byCTP}{intervall in mass for the sum in profile mode}
+
+\item{centroided}{TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
+
+\item{ppm}{select the peak with the minimal distance within the ppm distance.}
+
+\item{limitIntegration}{0.1 by default: window where to research peaks for each ion of integrationTable}
 }
 \value{
 an ibm object containing a data.frame (accessible by ibmObject[[1]])
