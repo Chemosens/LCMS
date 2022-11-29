@@ -59,6 +59,9 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
 #originalRepo=getwd()
 reposave="./../../tmp/correlation"
 repoData="./../../extdata"
+# repoData="C:/Users/CalculCaro/Desktop/Rpackages/LCMS/extdata"
+# reposave="C:/Users/CalculCaro/Desktop/Rpackages/LCMS//tmp/correlation"
+
 #setwd(repoData)
 listFiles=c("CSCQ131011.mzXML","CSCQ131012.mzXML")
 

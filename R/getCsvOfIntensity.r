@@ -13,7 +13,7 @@ getCsvOfIntensity=function(res,reposave)
   for(class in classTable[,"class"])
   {
     print(class)
-    write_ibm_save(res[[class]],name_repo="ok",reposave=reposave,integrationTable_class=integrationTable[integrationTable[,"class"]==class,],transform=T,columnIntegrationTable=columnForIntegrationTable)
+    write_ibm_save(res[[class]],reposave=reposave,integrationTable_class=integrationTable[integrationTable[,"class"]==class,],transform=T,columnIntegrationTable=columnForIntegrationTable,centroid=res$call$centroided)
   }
   #getting log parameters
   setwd(reposave)

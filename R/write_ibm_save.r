@@ -1,5 +1,5 @@
 
-write_ibm_save=function(res,name_repo="table",reposave,integrationTable_class,transform=T,columnIntegrationTable=c("class","compo","name","mz","std"))
+write_ibm_save=function(res,reposave,integrationTable_class,transform=T,columnIntegrationTable=c("class","compo","name","mz","std"),centroid=FALSE)
 {
   setwd(reposave)
   rt=res$call$rt
@@ -18,12 +18,17 @@ write_ibm_save=function(res,name_repo="table",reposave,integrationTable_class,tr
     pct=transform_files(res[["intensity"]],integrationTable=integrationTable_class,percent=TRUE,columnIntegrationTable=columnIntegrationTable)
     ppm=transform_files(res[["ppm"]],integrationTable=integrationTable_class,columnIntegrationTable=columnIntegrationTable)
     mzobs=transform_files(res[["mz"]],integrationTable=integrationTable_class,columnIntegrationTable=columnIntegrationTable)
-    
-    write.table(intens,file=paste0("int_",name_repo,"_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
-    write.table(pct,file=paste0("pct_",name_repo,"_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
-    write.table(mzobs,file=paste0("mzo_",name_repo,"_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
-    write.table(ppm,file=paste0("ppm_",name_repo,"_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
-  }
+
+    write.table(intens,file=paste0("int_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
+    write.table(pct,file=paste0("pct_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
+    write.table(mzobs,file=paste0("mzo_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
+    write.table(ppm,file=paste0("ppm_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
+    if(centroid)
+    {
+      rtobs=transform_files(res[["rt"]],integrationTable=integrationTable_class,columnIntegrationTable=columnIntegrationTable)
+      write.table(rtobs,file=paste0("rto_",class,"_",retTime,".csv"),sep=";",row.names = FALSE)
+    }
+   }
   
   return(list(res=res,intens=intens,pct=pct,ppm=ppm,mzobs=mzobs))
   

@@ -79,7 +79,5 @@
       df_mass=list(intensity=res_intensity,mz=res_mz,ppm=res_ppm)
       if(centroided){df_mass[["rt"]]=res_rt}
     }
-    
-    
     return(df_mass)
   }

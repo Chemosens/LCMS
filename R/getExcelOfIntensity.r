@@ -23,6 +23,6 @@ getExcelOfIntensity=function(reposave,samples=NULL,nameFile=NULL,output="int",ti
     classPos=c(classPos,paste0(classTable[i,"class"],"_",paste0(classTable[i,"rtmin"],"-",classTable[i,"rtmax"])))
   }
  if("std"%in%colnames(integrationTable)){not_samples=c("name","class","compo","mz","avg","nNA","sd","CV","std")}else{not_samples=c("name","class","compo","mz","avg","nNA","sd","CV")}
- res=get_excel(repo=reposave,name="",classes=classPos,type="ok",output=output,integrationTable=integrationTable,not_samples=not_samples,samples=samples,nameFile=nameFile,timeSd=timeSd,colors=colors)
+ res=get_excel(repo=reposave,name="",classes=classPos,output=output,integrationTable=integrationTable,not_samples=not_samples,samples=samples,nameFile=nameFile,timeSd=timeSd,colors=colors)
   return(res)
 }
