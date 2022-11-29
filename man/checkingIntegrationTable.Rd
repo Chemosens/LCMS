@@ -2,8 +2,7 @@
 % Please edit documentation in R/checkingIntegrationTable.r
 \name{checkingIntegrationTable}
 \alias{checkingIntegrationTable}
-\title{checkingIntegrationTable
-This function checks whether duplicates exist in the integrationTable and allows to highlight potential mistakes in the integrationTable}
+\title{checkingIntegrationTable}
 \usage{
 checkingIntegrationTable(
   integrationTable,
@@ -17,7 +16,6 @@ checkingIntegrationTable(
 \item{duplicatedName}{can be 'name' (default) or 'compo'. Detects if duplicated in this modality exists.}
 }
 \description{
-checkingIntegrationTable
 This function checks whether duplicates exist in the integrationTable and allows to highlight potential mistakes in the integrationTable
 }
 \examples{

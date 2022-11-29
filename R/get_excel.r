@@ -1,13 +1,13 @@
 #' @importFrom ggplot2 geom_col theme theme_bw element_text scale_color_manual geom_errorbar
 #' @importFrom openxlsx insertPlot conditionalFormatting saveWorkbook
 #' @importFrom stats reshape sd
-get_excel=function(repo,name="",classes=c("PE","PI"),type="BL",output="int",integrationTable,not_samples=c("name","class","compo","mz","std","avg","nNA","sd","CV"),samples=NULL,nameFile=NULL,timeSd=3,colors=NULL)
+get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTable,not_samples=c("name","class","compo","mz","std","avg","nNA","sd","CV"),samples=NULL,nameFile=NULL,timeSd=3,colors=NULL)
 {
   compo=avg=upper=lower=NULL
   setwd(repo)
   # Checks whether the file to create is already existing
   list_p=list()
-  if(is.null(nameFile)){nameFile=paste0(name,output,type,".xlsx")}
+  if(is.null(nameFile)){nameFile=paste0(name,output,".xlsx")}
   print(nameFile)
   if(nameFile%in%list.files()){print("warning: the file to be written was already in the directory and was overwritten.");file.remove(nameFile)}
   
@@ -20,7 +20,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),type="BL",output="int",inte
   for(classe in classes)
   {
     addWorksheet(wb,classe)
-    namefile=paste0(output,"_",type,"_",classe,".csv")
+    namefile=paste0(output,"_",classe,".csv")
     x=read.table(namefile,sep=";",header=TRUE)
     if(is.null(samples))
     {

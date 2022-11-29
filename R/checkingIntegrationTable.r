@@ -1,5 +1,6 @@
 #'checkingIntegrationTable
-#'This function checks whether duplicates exist in the integrationTable and allows to highlight potential mistakes in the integrationTable
+#'
+#' This function checks whether duplicates exist in the integrationTable and allows to highlight potential mistakes in the integrationTable
 #' @param integrationTable a table that must contain several columns: "compo" for the composition, "name" for the lipid species; "mz" for the theoretical exact mass/z (warnings: this exact mass has to vary depending on the mode NEG/POS of the acquisition); 
 #' @param duplicatedName can be 'name' (default) or 'compo'. Detects if duplicated in this modality exists.
 #' @examples 
