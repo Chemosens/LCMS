@@ -7,13 +7,15 @@
 #' @param normalization "none" for no normalization, "max" for a maximale value of the peak to 100, "sum" for a total sum of the spectra of 100
 #' @param by a numeric value. If breaks and integrationTable are NULL, breaks are automatically computed from min to max by a step defined by this parameter
 #' @param spar 0 by default. Smoothing parameter between 0 (no smoothing) and 1
-#' @param agregation "none" "sum" or "mean". 
+#' @param agregation "none" "sum" or "mean".
 #' @param comparisonToPeaks If TRUE, the intensity value is the one of the closest mass peak contained in the integration table limits
 #' @param limitIntegration 0.1 by default: window where to research peaks for each ion of integrationTable
-#' @param higherThanNoise select only peaks which are  higherThanNoise times higher than the noise
+#' @param minimalIntensityForPeak in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak
+#' @param higherThanNoise in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak
 #' @param byCTP intervall in mass for the sum in profile mode
 #' @param centroided TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.
-#' @param ppm select the peak with the minimal distance within the ppm distance. 
+#' @param ppm select the peak with the minimal distance within the ppm distance.
+
 #' @return an ibm object containing a data.frame (accessible by ibmObject[[1]])
 #'@export
 #'@importFrom data.table data.table
@@ -23,8 +25,8 @@
 #' #head(int_mass)
 #'@importFrom MSnbase filterRt rtime
 #'@importFrom MSnbase estimateNoise
-lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
-{ 
+lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,minimalIntensityForPeak=50,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
+{
   name=NULL
   myWhichMin=function(mz_obs,mz_theo,ppm,centroided=centroided)
   {
@@ -50,7 +52,7 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
    if(agregation!="none")
   {
   if(is.null(integrationTable))
-  { 
+  {
     lcms_df=as(lcms,"data.frame")
     if(is.null(breaks))
     {
@@ -59,7 +61,7 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
       se=seq(mi,ma,by=by)
       breaks=se[-c(1,length(se))]
     }
-   
+
       labs=1/2*(breaks[2:length(breaks)]+breaks[1:(length(breaks)-1)])
       massbreaks=cut(lcms_df[,"mz"],breaks=breaks,labels=labs)
       resdt=data.table("name"=massbreaks,"i"=lcms_df[,"i"],"mz"=lcms_df[,"mz"])
@@ -71,7 +73,7 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
       {
         resdf= resdt[,list("mz"=mean(mz),"int"= mean(i,na.rm=TRUE)),by = name]
       }
-        
+
       resdf=as.data.frame(resdf)
       resdf=resdf[!is.na(resdf[,"name"]),c("mz","int","name")]
       colnames(resdf)=c("mz","intensity","name")
@@ -80,16 +82,16 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
   {
     integrationTable[,"inf"]=integrationTable[,"mz"]-limitIntegration;
     integrationTable[,"sup"]=integrationTable[,"mz"]+limitIntegration;
-    if(!comparisonToPeaks)
+    if(!comparisonToPeaks) # if we don't compare to peakPicking peaks: sum of all the mz in the retention window
     {
       lcms_df=as(lcms,"data.frame")
       resdf=NULL
       for(i in 1:dim(integrationTable)[1])
-      { 
+      {
          MassAxis=lcms_df[,"mz"]
         masses_label=
         MassAxis>=integrationTable[i,"inf"] &MassAxis<=integrationTable[i,"sup"]
-        
+
         dfSubset=lcms_df[masses_label,]
         if(agregation=="sum")
         {
@@ -99,23 +101,23 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
         {
           sumSubset=c(integrationTable[i,"mz"],mean(dfSubset[,"i"]))
         }
-        
+
         resdf=rbind(resdf,sumSubset)
-      } 
+      }
       resdf=as.data.frame(resdf)
       colnames(resdf)=c("mz","intensity")
       resdf[,"name"]=integrationTable[,"name"]
     }
-    if(comparisonToPeaks)
-    { 
+    if(comparisonToPeaks) # if we compare to peaks
+    {
       if(!centroided)
       {
-        ibm2=lcmsIntensityByMass(lcms,by=byCTP,agregation = "sum",rt=rt)
+        ibm2=lcmsIntensityByMass(lcms,by=byCTP,agregation = "sum",rt=rt) # we calculate a spectra by cutting by byCTP.
         sp1 <- new("Spectrum1",intensity = ibm2$df[,"intensity"], mz =ibm2$df[,"mz"], centroided = FALSE)
-        # Uniquement valide pour le profile ! 
-        noise=estimateNoise(sp1)[1,"intensity"] 
-        peaks=pickingPeaks(ibm2$df)
-        peaks2=peaks[peaks[,"intensity"]>higherThanNoise*noise,]
+        # Uniquement valide pour le profile !
+        noise=estimateNoise(sp1)[1,"intensity"] # estimation of the noise on this window
+        peaks=pickingPeaks(ibm2$df) # Selection of peaks
+        peaks2=peaks[peaks[,"intensity"]>max(higherThanNoise*noise,minimalIntensityForPeak),]
         peaks2=peaks
       }
       if(centroided)
@@ -158,8 +160,8 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
           }
         }
       }
-      
-      resdf=data.frame(name=names(res),theo_mz=mztheo,mz=mzmat,intensity=res) 
+
+      resdf=data.frame(name=names(res),theo_mz=mztheo,mz=mzmat,intensity=res)
       if(centroided){resdf[,"rt"]=rt_obs}
     }
   }
@@ -167,7 +169,7 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
   rownames(resdf)=NULL
   if(normalization=="max")
   {
-    resdf[,"intensity"]=100*resdf[,"intensity"]/max(resdf[,"intensity"])  
+    resdf[,"intensity"]=100*resdf[,"intensity"]/max(resdf[,"intensity"])
   }
   if(normalization=="sum")
   {
@@ -181,5 +183,5 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
   }
   ibm=list(df=resdf)
   class(ibm)<-"ibm"
-  return(ibm)  
+  return(ibm)
 }

@@ -16,6 +16,7 @@ lcmsIntensityByMass(
   agregation = "sum",
   comparisonToPeaks = FALSE,
   higherThanNoise = 10,
+  minimalIntensityForPeak = 50,
   byCTP = 0.001,
   centroided = FALSE,
   ppm = 15,
@@ -43,7 +44,9 @@ lcmsIntensityByMass(
 
 \item{comparisonToPeaks}{If TRUE, the intensity value is the one of the closest mass peak contained in the integration table limits}
 
-\item{higherThanNoise}{select only peaks which are  higherThanNoise times higher than the noise}
+\item{higherThanNoise}{in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
+
+\item{minimalIntensityForPeak}{in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
 
 \item{byCTP}{intervall in mass for the sum in profile mode}
 

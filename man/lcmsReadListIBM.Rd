@@ -15,10 +15,12 @@ lcmsReadListIBM(
   agregation = "mean",
   comparisonToPeaks = TRUE,
   wideFormat = FALSE,
-  byCTP = 0.001,
   centroided = FALSE,
   ppm = 15,
   limitIntegration = 0.1,
+  byCTP = 0.001,
+  higherThanNoise = 10,
+  minimalIntensityForPeak = 50,
   repo = ""
 )
 }
@@ -43,13 +45,17 @@ lcmsReadListIBM(
 
 \item{wideFormat}{If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long}
 
-\item{byCTP}{intervall in mass for the sum in profile mode}
-
 \item{centroided}{TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
 
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 
 \item{limitIntegration}{0.1 by default: window where to research peaks for each ion of integrationTable}
+
+\item{byCTP}{intervall in mass for the sum in profile mode}
+
+\item{higherThanNoise}{in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
+
+\item{minimalIntensityForPeak}{in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
 }
 \description{
 lcmsReadListIBM

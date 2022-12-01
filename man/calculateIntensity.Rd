@@ -14,7 +14,10 @@ calculateIntensity(
   ppmThreshold = 10,
   ppm = 10,
   limitIntegration = 0.1,
-  repo = ""
+  repo = "",
+  byCTP = 0.001,
+  higherThanNoise = 10,
+  minimalIntensityForPeak = 50
 )
 }
 \arguments{
@@ -25,6 +28,12 @@ calculateIntensity(
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 
 \item{limitIntegration}{0.1 by default: window where to research peaks for each ion of integrationTable}
+
+\item{byCTP}{intervall in mass for the sum in profile mode}
+
+\item{higherThanNoise}{in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
+
+\item{minimalIntensityForPeak}{in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
 }
 \description{
 calculateIntensity
