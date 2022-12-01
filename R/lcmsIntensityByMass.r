@@ -13,7 +13,7 @@
 #' @param minimalIntensityForPeak in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak
 #' @param higherThanNoise in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak
 #' @param byCTP intervall in mass for the sum in profile mode
-#' @param centroided TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.
+#' @param centroided TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.
 #' @param ppm select the peak with the minimal distance within the ppm distance.
 
 #' @return an ibm object containing a data.frame (accessible by ibmObject[[1]])
@@ -25,7 +25,7 @@
 #' #head(int_mass)
 #'@importFrom MSnbase filterRt rtime
 #'@importFrom MSnbase estimateNoise
-lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,minimalIntensityForPeak=50,byCTP=0.001,centroided=FALSE,ppm=15,limitIntegration=0.1)
+lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,minimalIntensityForPeak=50,byCTP=0.001,centroided=TRUE,ppm=15,limitIntegration=0.1)
 {
   name=NULL
   myWhichMin=function(mz_obs,mz_theo,ppm,centroided=centroided)
@@ -182,6 +182,7 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
     resdf=data.frame(mz=lcms_df[,"mz"],intensity=lcms_df[,"i"],name=as.character(lcms_df[,"mz"]))
   }
   ibm=list(df=resdf)
+  if(!centroided&comparisonToPeaks){ibm$noise=noise}
   class(ibm)<-"ibm"
   return(ibm)
 }

@@ -23,7 +23,7 @@ calculateIntensity(
 \arguments{
 \item{integrationTable}{table of integration whose columns are named 'name','mz','inf','sup' and 'class'}
 
-\item{centroided}{TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
+\item{centroided}{TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
 
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 

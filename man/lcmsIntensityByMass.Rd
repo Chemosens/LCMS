@@ -18,7 +18,7 @@ lcmsIntensityByMass(
   higherThanNoise = 10,
   minimalIntensityForPeak = 50,
   byCTP = 0.001,
-  centroided = FALSE,
+  centroided = TRUE,
   ppm = 15,
   limitIntegration = 0.1
 )
@@ -50,7 +50,7 @@ lcmsIntensityByMass(
 
 \item{byCTP}{intervall in mass for the sum in profile mode}
 
-\item{centroided}{TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
+\item{centroided}{TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
 
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 

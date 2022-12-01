@@ -45,7 +45,7 @@ lcmsReadListIBM(
 
 \item{wideFormat}{If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long}
 
-\item{centroided}{TRUEp by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
+\item{centroided}{TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
 
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 
