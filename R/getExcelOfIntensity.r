@@ -7,7 +7,7 @@
 #'@param output 'int' for intensity (absolute) results or 'pct' for data normalized by the sum of the signal per class.
 #'@param timeSd  when an intensity is higher (or lower) than avg+timeSd*sd (or -), the excel cell is colored in green (or blue)
 #'@param colors allowing to specify a color vector for the graphs in the excel
-#'@export
+#'@export getExcelOfIntensity
 #'@importFrom utils read.table
 #'@importFrom openxlsx createWorkbook createStyle addWorksheet writeData
 #'@importFrom ggplot2 ggplot aes

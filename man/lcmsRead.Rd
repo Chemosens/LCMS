@@ -23,6 +23,6 @@ lcmsRead
 }
 \examples{
 #  DO NOT RUN
-#  file <- dir(system.file(package = "chemosensR", dir = "extdata"),full.name=TRUE,pattern="mzXML$")
+#  file <- dir(system.file(package = "LCMS", dir = "extdata"),full.name=TRUE,pattern="mzXML$")
 # lcms=lcmsRead(file)
 }

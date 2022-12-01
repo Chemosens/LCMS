@@ -3,8 +3,8 @@
 #'Saves all results obtained with calculateIntensity into several .csv files. Mandatory before running getExcelOfIntensity
 #'@param res results of calculateIntensity
 #'@param reposave repository where the .csv will be saved
-#'@export
-#'@importFrom utils write.table 
+#'@export getCsvOfIntensity
+#'@importFrom utils write.table
 getCsvOfIntensity=function(res,reposave)
 {
   classTable=res$call$classTable

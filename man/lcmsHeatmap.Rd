@@ -7,6 +7,7 @@
 lcmsHeatmap(
   lcms,
   threshold = 100,
+  mz = NULL,
   timebreaks = 100,
   massbreaks = 100,
   rt = NULL
