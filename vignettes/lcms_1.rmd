@@ -1,22 +1,11 @@
 ---
-title: "LCMS"
+title: "LCMS package"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{LCMS}
+  %\VignetteIndexEntry{LCMS package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-```{r setup}
-library(LCMS)
-```
 
 This vignette aims to describe how to analyse semi-targeted data in lipid analysis. 
 
