@@ -10,7 +10,8 @@ getExcelOfIntensity(
   nameFile = NULL,
   output = "int",
   timeSd = 3,
-  colors = NULL
+  colors = "default",
+  thresholdCV = 30
 )
 }
 \arguments{
@@ -24,7 +25,7 @@ getExcelOfIntensity(
 
 \item{timeSd}{when an intensity is higher (or lower) than avg+timeSd*sd (or -), the excel cell is colored in green (or blue)}
 
-\item{colors}{allowing to specify a color vector for the graphs in the excel}
+\item{colors}{allowing to specify whether the default ggplot colors (NULL) or default colors ("default") should be used in the graphs in the excel}
 }
 \description{
 Compiles all .csv files obtained with getCsvOfIntensity of one single excel file with some graphs.
