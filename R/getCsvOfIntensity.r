@@ -5,6 +5,16 @@
 #'@param reposave repository where the .csv will be saved
 #'@export getCsvOfIntensity
 #'@importFrom utils write.table
+#'@examples
+#'#'  # Example of use - to be updated according to the position of your data
+#'  #repo=getwd()  # Here in the current working directory
+#'  #files=list.files() # Here on all the files present in the working directory
+#'  # integrationTable=read.table("C://integrationTable.csv")
+#'  # integrationTable=read.table("C://integrationTable.csv")
+#'  #res=calculateIntensity(repo, files, integrationTable,classTable)
+#'  # reposave="D://MyResults"#Where the .csv of results will be produced
+#'  #getCsvOfIntensity(res,reposave=reposave)
+
 getCsvOfIntensity=function(res,reposave)
 {
   classTable=res$call$classTable

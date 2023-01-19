@@ -1,7 +1,24 @@
 #' calculateIntensity
+#'
+#' For all the .mzXML specified in files, the intensities of all the molecules defined in the integrationTable are calculated taking the limits of retention times stored in classTable
 #'@export
 #'@inheritParams lcmsReadListIBM
-calculateIntensity=function(repoData=repoData,files,integrationTable=integrationTable,classTable,nameFile="BL.xlsx",centroided=T,ppmThreshold=10,ppm=10,limitIntegration=0.1,repo="",byCTP=0.001,higherThanNoise=10,minimalIntensityForPeak=50)
+#'@param repoData repository where the .mzXML files are stored
+#'@param files names of the .mzXML files to be processed
+#'@param classTable table of retention time (in seconds) for the different classes whose columns are labelled 'class' 'rtmin' 'rtmax
+#'@param ppmThreshold limit of ppm required as last step of processing
+#'@return a list containing all the results per class
+#'@examples
+#' {
+#'  # Example of use - to be updated according to the position of your data
+#'  #repo=getwd()  # Here in the current working directory
+#'  #files=list.files() # Here on all the files present in the working directory
+#'  # integrationTable=read.table("C://integrationTable.csv")
+#'  # integrationTable=read.table("C://integrationTable.csv")
+#'  #res=calculateIntensity(repo, files, integrationTable,classTable)
+#' }
+#'
+calculateIntensity=function(repoData=repoData,files,integrationTable,classTable,centroided=T,ppmThreshold=10,ppm=10,limitIntegration=0.1,byCTP=0.001,higherThanNoise=10,minimalIntensityForPeak=50)
 {
   res=list()
   for(i in 1:dim(classTable)[1])

@@ -7,11 +7,12 @@
 getExcelOfIntensity(
   reposave,
   samples = NULL,
-  nameFile = NULL,
+  nameFile = "Results.xlsx",
   output = "int",
   timeSd = 3,
   colors = "default",
-  thresholdCV = 30
+  thresholdCV = 30,
+  includeStd = F
 )
 }
 \arguments{
@@ -19,14 +20,28 @@ getExcelOfIntensity(
 
 \item{samples}{which samples must be included in the analysis (default NULL corresponds to all samples)}
 
-\item{nameFile}{name of the excel file containing the results}
+\item{nameFile}{name of the excel file containing the results. Default to Results.xlsx}
 
 \item{output}{'int' for intensity (absolute) results or 'pct' for data normalized by the sum of the signal per class.}
 
 \item{timeSd}{when an intensity is higher (or lower) than avg+timeSd*sd (or -), the excel cell is colored in green (or blue)}
 
 \item{colors}{allowing to specify whether the default ggplot colors (NULL) or default colors ("default") should be used in the graphs in the excel}
+
+\item{includeStd}{should the standard information be included in statistics (especially the sum by lipid class)}
 }
 \description{
 Compiles all .csv files obtained with getCsvOfIntensity of one single excel file with some graphs.
+}
+\examples{
+ # Example of use - to be updated according to the position of your data
+ #repo=getwd()  # Here in the current working directory
+ #files=list.files() # Here on all the files present in the working directory
+ # integrationTable=read.table("C:/integrationTable.csv")
+ # integrationTable=read.table("C:/integrationTable.csv")
+ #res=calculateIntensity(repo, files, integrationTable,classTable)
+ # reposave="D:/MyResults"#Where the .csv of results will be produced
+ #getCsvOfIntensity(res,reposave=reposave)
+ # getExcelOfIntensity(reposave)
+
 }

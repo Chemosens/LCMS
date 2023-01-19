@@ -1,8 +1,9 @@
 #' @importFrom ggplot2 geom_col theme theme_bw element_text scale_color_manual geom_errorbar
 #' @importFrom openxlsx insertPlot conditionalFormatting saveWorkbook
 #' @importFrom stats reshape sd
-get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTable,not_samples=c("name","class","compo","mz","std","avg","nNA","sd","CV"),samples=NULL,nameFile=NULL,timeSd=3,colors="default",thresholdCV=30)
+get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTable,not_samples=c("name","class","compo","mz","std","avg","nNA","sd","CV"),samples=NULL,nameFile=NULL,timeSd=3,colors="default",thresholdCV=30,includeStd=F)
 {
+
   compo=avg=upper=lower=NULL
   setwd(repo)
   # Checks whether the file to create is already existing
@@ -17,6 +18,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
   styleGreen=createStyle(fontColour="#009C06",bgFill="#CEFFCE")
   styleBlue=createStyle(fontColour="#00069C",bgFill="#CECEFF")
   df_class=data.frame()
+  list_df=list()
   for(classe in classes)
   {
     addWorksheet(wb,classe)
@@ -35,6 +37,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
         stop("Error: some samples are not in colnames(x)")
       }
     }
+    if(includeStd==F&!"std"%in%not_samples){includeStd=T}
     x=as.data.frame(x)
     x2=x[,c(not_samples,samples)]
     x2=x2[c(nrow(x2),1:(nrow(x2)-1)),]
@@ -43,24 +46,53 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
     {
       x2[,(length(not_samples)+1):ncol(x2)]=apply(x2[,(length(not_samples)+1):ncol(x2)],2,as.numeric)
       x2[,c("avg","nNA","sd","CV")]=apply(x2[,c("avg","nNA","sd","CV")],2,as.numeric)
-      x2[,"avg"]=apply(x2[,samples],1,function(x){return(mean(x,na.rm=T))})
-      x2[,"sd"]=apply(x2[,samples],1,function(x){return(sd(x,na.rm=T))})
+      if(!includeStd){linesSelected=!is.na(x2[,"std"])&x2[,"std"]=="no"}else{linesSelected=1:nrow(x2)}
+      x2[linesSelected,"avg"]=apply(x2[linesSelected,samples],1,function(x){return(mean(x,na.rm=T))})
+      x2[linesSelected,"sd"]=apply(x2[linesSelected,samples],1,function(x){return(sd(x,na.rm=T))})
       x2[,"CV"]=100*x2[,"sd"]/x2[,"avg"]
-      x2[,"nNA"]=apply(x2[,samples],1,function(x){return(sum(is.na(x)))})
-      line_to_add=x2[x2[,"name"]=="sum",]
-      line_to_add["name"]=classe
-      df_class=rbind(df_class,line_to_add)
+      x2[linesSelected,"nNA"]=apply(x2[linesSelected,samples],1,function(x){return(sum(is.na(x)))})
+      if(includeStd)
+      {
+        line_to_add=x2[x2[,"name"]=="sum",]
+        line_to_add["name"]=classe
+        df_class=rbind(df_class,line_to_add)
+      }
+      else # standards are removed from the statistics
+      {
+       line_to_add=apply(x2[!is.na(x2[,"std"])&x2[,"std"]=="no",samples],2,function(x){return(sum(x,na.rm=T))})
+       x2[1,samples]=line_to_add # on remplace les valeurs de x2
+       x2[1,"avg"]=mean(line_to_add,na.rm=T)
+       x2[1,"sd"]=sd(line_to_add,na.rm=T)
+       x2[1,"nNa"]=sum(is.na(line_to_add))
+       line_to_add2=x2[1,]
+       line_to_add2["name"]=classe
+       df_class=rbind(df_class,line_to_add2)
+      }
+
     }
     if(length(samples)==1)
     {
-      x2[,"avg"]=x2[,samples]
-      x2[,"sd"]=0
+      if(!includeStd){linesSelected=!is.na(x2[,"std"])&x2[,"std"]=="no"}else{linesSelected=1:nrow(x2)}
+      x2[linesSelected,"avg"]=x2[linesSelected,samples]
+      x2[linesSelected,"sd"]=0
       x2[,"CV"]=NA
-      x2[,"nNA"]=sum(is.na(x2[,samples]))
-      line_to_add=x2[x2[,"name"]=="sum",]
-      line_to_add["name"]=classe
-      df_class=rbind(df_class,line_to_add)
+      x2[linesSelected,"nNA"]=sum(is.na(x2[,samples]))
+      if(includeStd)
+      {
+        line_to_add=x2[x2[,"name"]=="sum",]
+        line_to_add["name"]=classe
+        df_class=rbind(df_class,line_to_add)
+      }
+      if(!includeStd)
+      {
+        line_to_add=x2[!is.na(x2[,"std"])&x2[,"std"]=="no",samples]
+        x2[1,samples]=line_to_add
+        line_to_add2=x2[1,]
+        line_to_add2["name"]=classe
+        df_class=rbind(df_class,line_to_add2)
+      }
     }
+    list_df[[classe]]=x2
     conditionalFormatting(wb=wb,sheet=classe,cols=which(colnames(x2)=="CV"),rows=2:(nrow(x2)+1),style=styleRed,type="expression",rule=paste0(">",thresholdCV))
     if("std" %in% not_samples)
     {
@@ -80,7 +112,8 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
     #p1=ggplot(x3[-1,],aes(x=compo,y=avg))+geom_col(fill="light blue")+geom_errorbar(data=x3, mapping=aes(x=compo, ymin=upper, ymax=lower))+theme_bw()+ theme(axis.text.x = element_text( angle=45,hjust=1))
     #print(p1) # plot needs to be showed
     #insertPlot(wb, sheet=classe, width = 10, height = 3.5, fileType = "png", units = "in",startRow=nrow(x2)+3,startCol=1)
-    castedres=reshape(x2[-1,],direction="long",v.names="intensity",times=samples,varying=list(samples),timevar="sample")
+    if(includeStd){castedres=reshape(x2[-1,],direction="long",v.names="intensity",times=samples,varying=list(samples),timevar="sample")}
+    if(!includeStd){castedres=reshape(x2[x2[,"std"]=="no",],direction="long",v.names="intensity",times=samples,varying=list(samples),timevar="sample")}
     if(is.null(colors))
     {
       p=ggplot(castedres, aes(x=sample,y=intensity,fill=compo,group=sample,name=name))+geom_col() +theme_bw()+ theme(axis.text.x = element_text( angle=45,hjust=1))
@@ -116,6 +149,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
     }
   }
 
+  # Writing the supplementary tabs total  and total_pct
   if(output=="int")
   {
     # Writing total sheet
@@ -153,6 +187,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
     df_class_pct=df_class2
     if(length(samples)>1)
     {
+
       df_class_pct[,samples]=100*sweep(df_class_pct[,samples],2,apply(df_class_pct[,samples],2,function(x){return(sum(x,na.rm=T))}),"/")
       df_class_pct[,"avg"]=apply(df_class_pct[,samples],1,function(x){mean(x,na.rm=T)})
       df_class_pct[,"sd"]=apply(df_class_pct[,samples],1,function(x){sd(x,na.rm=T)})
@@ -192,7 +227,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
      list_p[["total_pct"]]=p
     insertPlot(wb, sheet="total_pct", width = 10, height = 5, fileType = "png", units = "in",startRow=nrow(df_class)+3,startCol=1)
   }
-
+  else{df_class=NULL}
 
   if("parameters.csv"%in%list.files())
   {
@@ -212,7 +247,6 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
     addWorksheet(wb,"integrationTable")
     writeData(wb,sheet="integrationTable",integrationTable)
   }
-
   saveWorkbook(wb,nameFile)
-  return(list(wb=wb,list_p=list_p))
+  return(list(wb=wb,list_p=list_p,df_class=list_df,total=df_class))
 }

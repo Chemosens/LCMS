@@ -7,23 +7,29 @@
 calculateIntensity(
   repoData = repoData,
   files,
-  integrationTable = integrationTable,
+  integrationTable,
   classTable,
-  nameFile = "BL.xlsx",
   centroided = T,
   ppmThreshold = 10,
   ppm = 10,
   limitIntegration = 0.1,
-  repo = "",
   byCTP = 0.001,
   higherThanNoise = 10,
   minimalIntensityForPeak = 50
 )
 }
 \arguments{
+\item{repoData}{repository where the .mzXML files are stored}
+
+\item{files}{names of the .mzXML files to be processed}
+
 \item{integrationTable}{table of integration whose columns are named 'name','mz','inf','sup' and 'class'}
 
+\item{classTable}{table of retention time (in seconds) for the different classes whose columns are labelled 'class' 'rtmin' 'rtmax}
+
 \item{centroided}{TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.}
+
+\item{ppmThreshold}{limit of ppm required as last step of processing}
 
 \item{ppm}{select the peak with the minimal distance within the ppm distance.}
 
@@ -35,6 +41,20 @@ calculateIntensity(
 
 \item{minimalIntensityForPeak}{in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
 }
+\value{
+a list containing all the results per class
+}
 \description{
-calculateIntensity
+For all the .mzXML specified in files, the intensities of all the molecules defined in the integrationTable are calculated taking the limits of retention times stored in classTable
+}
+\examples{
+{
+ # Example of use - to be updated according to the position of your data
+ #repo=getwd()  # Here in the current working directory
+ #files=list.files() # Here on all the files present in the working directory
+ # integrationTable=read.table("C://integrationTable.csv")
+ # integrationTable=read.table("C://integrationTable.csv")
+ #res=calculateIntensity(repo, files, integrationTable,classTable)
+}
+
 }

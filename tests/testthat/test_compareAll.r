@@ -14,7 +14,7 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
   wb_auto=loadWorkbook(name_auto)
   classes=sheets(wb_auto)
   wb_manu=loadWorkbook(name_manu)
-  
+
   vec_manu=c()
   vec_auto=c()
   vec_name=c()
@@ -22,10 +22,10 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
   for(class in classWithoutTotal)
   {
     print(class)
-    class_manu=read.xlsx(name_manu,sheet=class) 
+    class_manu=read.xlsx(name_manu,sheet=class)
     manu=class_manu[,"intensity"];names(manu)=class_manu[,"compo"]
-  
-    class_auto=read.xlsx(name_auto,sheet=class)[-1,] 
+
+    class_auto=read.xlsx(name_auto,sheet=class)[-1,]
     auto=class_auto[,nameFileToCompare];names(auto)=class_auto[,"compo"]
     in_manu=names(manu)
     #if(sum(class_auto[,"name"]!=class_manu[,"name"])==0)
@@ -39,10 +39,10 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
     #   print(class)
     #   print(class_auto[,"name"]==class_manu[,"name"])
     # }
-    # 
+    #
     # plot(log(class_manu[,"intensity"]),log(class_auto[,"CSCQ131011.mzXML"]),main=class,xlab="manual",ylab="auto")
   }
-  
+
   df=data.frame(manuel=vec_manu,auto=vec_auto,name=vec_name)
   df_log=data.frame(manuel=log(vec_manu,base=10),auto=log(vec_auto,base=10),name=vec_name)
   library(ggplot2)
@@ -53,10 +53,11 @@ comparaisonXlsx=function(name_auto,name_manu,nameFileToCompare="CSCQ131011.mzXML
   #p_log=ggplotly(p_log)
   correlation=cor(log(vec_manu+1),log(vec_auto+1),use="pairwise.complete.obs")
   correlationLog=cor((vec_manu+1),(vec_auto+1),use="pairwise.complete.obs")
-  
+
   return(list(p=p,correlationLog=correlationLog,correlation=correlation, df=df,df_log=df_log,p_log=p_log))
 }
-#originalRepo=getwd()
+# originalRepo=getwd()
+# setwd("C:/INRA/LCMS/tests/testthat")
 reposave="./../../tmp/correlation"
 repoData="./../../extdata"
 # repoData="C:/Users/CalculCaro/Desktop/Rpackages/LCMS/extdata"
@@ -72,8 +73,8 @@ integrationTablePos2=integrationTablePos
 
 # Class Table
 classTable=data.frame(class=c("GPCho","GPEtn_Pos","GPSer","Cer","GluCer","LacCer","LPC","Sphingomyelin","LPE_Pos","Sphingosine"),
-                      rtmin=60*c(3,2,2.5,0.25,0.35,0.6,4.6,4,2.9,0.55),
-                      rtmax=60*c(4,2.7,3.5,0.5,0.55,1,5,4.5,3.5,1.33))
+                      rtmin=60*c(3,2  ,2.5,0.25,0.35,0.6,4.6,4  , 2.9,0.55),
+                      rtmax=60*c(4,2.7,3.5,0.5 ,0.55,1  ,5  ,4.5, 3.5,1.33))
 
 # Calculating intensity with LCMS packages
 res=calculateIntensity(repoData=repoData,files=listFiles,integrationTable=integrationTablePos,classTable=classTable)
