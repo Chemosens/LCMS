@@ -46,14 +46,17 @@ blankFiles=c("CSCQ001.mzXML")
 resBlanks=calculateIntensity(repoData=repoData,files=blankFiles,integrationTable=integrationTable,classTable)
 resBlanks$call
  getCsvOfIntensity(resBlanks, reposave=reposaveBL)
- getExcelOfIntensity(reposaveBL,nameFile="BL.xlsx")
-
+eb= getExcelOfIntensity(reposaveBL,nameFile="BL.xlsx")
+index_std=!is.na(eb$df_class[[1]][,"std"])&eb$df_class[[1]][,"std"]=="no"
+test_that("check includeStd option -1sample",{expect_true(
+sum(eb$df_class[[1]][index_std,"CSCQ001.mzXML"])==eb$total[1,"CSCQ001.mzXML"]
+)})
 # Is that also working for dataset with no standards ?
 #======================================================
 # Where are the .xml ?
 integrationTable=read.xlsx("./../../extdata/hilic_neg_table111022.xlsx")
-integrationTable=integrationTable[,1:4]
-colnames(integrationTable)=c("class","name","compo","mz")
+integrationTable=integrationTable[,1:5]
+colnames(integrationTable)=c("class","name","compo","mz","std")
 classTable=read.xlsx("./../../extdata/rt_hilic_NEG.xlsx")
 
 # Is there duplicates in integration Table
@@ -77,8 +80,9 @@ test_that("no error in computation",{expect_true(!is.null(e1))})
 e_noStd=getExcelOfIntensity(reposaveQC,nameFile="QCnoStd.xlsx",output="int",includeStd=F)
 
 test_that("check includeStd option",{expect_true(
-e_noStd$df_class[[1]][1,"CSCQ005.mzXML"]==sum(e2$df_class[[1]][-1,"CSCQ005.mzXML"],na.rm=T)-e2$df_class[[1]][!is.na(e2$df_class[[1]][,"std"])&e2$df_class[[1]][,"std"]=="yes","CSCQ005.mzXML"]
+  e_noStd$df_class[[1]][1,"CSCQ005.mzXML"]==sum(e2$df_class[[1]][-1,"CSCQ005.mzXML"],na.rm=T)-e2$df_class[[1]][!is.na(e2$df_class[[1]][,"std"])&e2$df_class[[1]][,"std"]=="yes","CSCQ005.mzXML"]
 )})
+
 test_that("check includeStd option 2",{expect_true(
 e_noStd$df_class[[1]][1,"CSCQ005.mzXML"]==e_noStd$total[1,"CSCQ005.mzXML"]
 )})

@@ -85,7 +85,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
       }
       if(!includeStd)
       {
-        line_to_add=x2[!is.na(x2[,"std"])&x2[,"std"]=="no",samples]
+        line_to_add=sum(x2[!is.na(x2[,"std"])&x2[,"std"]=="no",samples],na.rm=T)
         x2[1,samples]=line_to_add
         line_to_add2=x2[1,]
         line_to_add2["name"]=classe
