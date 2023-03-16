@@ -15,7 +15,8 @@ calculateIntensity(
   limitIntegration = 0.1,
   byCTP = 0.001,
   higherThanNoise = 10,
-  minimalIntensityForPeak = 50
+  minimalIntensityForPeak = 50,
+  msLevel = 1
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ calculateIntensity(
 \item{higherThanNoise}{in profile (when peakPicking);select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
 
 \item{minimalIntensityForPeak}{in profile (when peakPicking); select only peaks which are  higherThanNoise times higher than the noise and higher than minimalIntensityForPeak}
+
+\item{msLevel}{level of MS (depending on the acquisition: could be 2 for SFC)}
 }
 \value{
 a list containing all the results per class

@@ -36,8 +36,8 @@ resQC=calculateIntensity(repoData=repoData,files=qcFiles,integrationTable=integr
 getCsvOfIntensity(resQC, reposave=reposaveQC)
 
 # Let's obtain an excel file with all the results
-getExcelOfIntensity(reposaveQC,nameFile="QC.xlsx",output="int")
-getExcelOfIntensity(reposaveQC,nameFile="QC_pct.xlsx",output="pct")
+getExcelOfIntensity(reposaveQC,nameFile="QCNeg.xlsx",output="int")
+getExcelOfIntensity(reposaveQC,nameFile="QCNeg_pct.xlsx",output="pct")
 
 
 # Is that also working for one single file ?

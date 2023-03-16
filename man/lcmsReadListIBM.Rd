@@ -21,7 +21,8 @@ lcmsReadListIBM(
   byCTP = 0.001,
   higherThanNoise = 10,
   minimalIntensityForPeak = 50,
-  repo = ""
+  repo = "",
+  msLevel = 1
 )
 }
 \arguments{

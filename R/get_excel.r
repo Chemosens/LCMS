@@ -63,7 +63,7 @@ get_excel=function(repo,name="",classes=c("PE","PI"),output="int",integrationTab
        x2[1,samples]=line_to_add # on remplace les valeurs de x2
        x2[1,"avg"]=mean(line_to_add,na.rm=T)
        x2[1,"sd"]=sd(line_to_add,na.rm=T)
-       x2[1,"nNa"]=sum(is.na(line_to_add))
+       x2[1,"nNA"]=sum(is.na(line_to_add))
        line_to_add2=x2[1,]
        line_to_add2["name"]=classe
        df_class=rbind(df_class,line_to_add2)
