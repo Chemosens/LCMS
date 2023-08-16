@@ -137,6 +137,8 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
           res[name_ion]=intens[,"intensity"]
           mzmat[name_ion]=intens[,"x"]
           mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
+
+          if(1e6*abs(mzmat[name_ion]-mztheo[name_ion])/mztheo[name_ion]>ppm){res[name_ion]=NA}
           if(centroided)
           {
             rt_obs[name_ion]=intens[,"rt"]

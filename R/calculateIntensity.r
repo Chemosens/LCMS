@@ -22,6 +22,13 @@
 calculateIntensity=function(repoData=repoData,files,integrationTable,classTable,centroided=T,ppmThreshold=10,ppm=10,limitIntegration=0.1,byCTP=0.001,higherThanNoise=10,minimalIntensityForPeak=50,msLevel=1)
 {
   res=list()
+  a=checkingIntegrationTable(integrationTable,duplicatedName="name")
+  if(a){stop("Duplicated names in integrationTable")}
+  #b=checkingIntegrationTable(integrationTable,duplicatedName="compo")
+  #if(b){stop("Duplicated compo in integrationTable")}
+  c=checkingClassTable(integrationTable=integrationTable,classTable=classTable)
+  if(c){stop("Error in classTable")}
+
   for(i in 1:dim(classTable)[1])
   {
     print(classTable[i,"class"])
