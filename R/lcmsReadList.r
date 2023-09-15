@@ -6,7 +6,7 @@
   #'@param wideFormat If TRUE the returned dataframe is wide (ions in columns), ifelse, the returned dataframe is long
   #'@inheritParams lcmsIntensityByMass
   #'@export
-  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,centroided=FALSE,ppm=15,limitIntegration=0.1,byCTP=0.001,higherThanNoise=10,minimalIntensityForPeak=50,repo="",msLevel=1)
+  lcmsReadListIBM=function(listFiles,normalization="none",rt=NULL,integrationTable=NULL,breaks=breaks,by=0.1,mz=NULL,agregation="mean",comparisonToPeaks=TRUE,wideFormat=FALSE,centroided=FALSE,ppm=15,limitIntegration=0.1,byCTP=0.001,higherThanNoise=10,minimalIntensityForPeak=50,repo="",msLevel=1,minimalNumberOfPoints=0)
   {
     df_mass=NULL
     listQC=listFiles
@@ -19,7 +19,7 @@
         lcms=readMSData(files=paste0(repo,"/",listFiles[i]),msLevel.=msLevel,mode="onDisk")
       }
       if(repo==""){ lcms=readMSData(files=listFiles[i],msLevel.=1,mode="onDisk")}
-       int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm,limitIntegration=limitIntegration,higherThanNoise=higherThanNoise,minimalIntensityForPeak=minimalIntensityForPeak)
+       int_mass=lcmsIntensityByMass(lcms,integrationTable=integrationTable,rt=rt,normalization = normalization,mz=mz,agregation=agregation,comparisonToPeaks=comparisonToPeaks,byCTP=byCTP,centroided=centroided,ppm=ppm,limitIntegration=limitIntegration,higherThanNoise=higherThanNoise,minimalIntensityForPeak=minimalIntensityForPeak,minimalNumberOfPoints=minimalNumberOfPoints)
 
       if(wideFormat==FALSE)
       {

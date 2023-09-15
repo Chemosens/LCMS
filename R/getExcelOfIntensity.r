@@ -7,7 +7,7 @@
 #'@param output 'int' for intensity (absolute) results or 'pct' for data normalized by the sum of the signal per class.
 #'@param timeSd  when an intensity is higher (or lower) than avg+timeSd*sd (or -), the excel cell is colored in green (or blue)
 #'@param colors allowing to specify whether the default ggplot colors (NULL) or default colors ("default") should be used in the graphs in the excel
-#'@param thresholdCV
+#'@param thresholdCV CV higher than this value are highlighted in red
 #'@param includeStd should the standard information be included in statistics (especially the sum by lipid class)
 #'@export getExcelOfIntensity
 #'@importFrom utils read.table

@@ -15,7 +15,7 @@
 #' @param byCTP intervall in mass for the sum in profile mode
 #' @param centroided TRUE by default (is the data centroided). If false, the profile mode is selected and the algorithm of peak detection is different.
 #' @param ppm select the peak with the minimal distance within the ppm distance.
-
+#' @param minimalNumberOfPoints if centroid, minimal number of peaks to be detected in the retention time window (if lower, the returned intensity is NA)
 #' @return an ibm object containing a data.frame (accessible by ibmObject[[1]])
 #'@export
 #'@importFrom data.table data.table
@@ -25,7 +25,7 @@
 #' #head(int_mass)
 #'@importFrom MSnbase filterRt rtime
 #'@importFrom MSnbase estimateNoise
-lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,minimalIntensityForPeak=50,byCTP=0.001,centroided=TRUE,ppm=15,limitIntegration=0.1)
+lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=NULL,by=0.0005,normalization="none",spar=0,agregation="sum",comparisonToPeaks=FALSE,higherThanNoise=10,minimalIntensityForPeak=50,byCTP=0.001,centroided=TRUE,ppm=15,limitIntegration=0.1,minimalNumberOfPoints=0)
 {
   name=NULL
   myWhichMin=function(mz_obs,mz_theo,ppm,centroided=centroided)
@@ -132,37 +132,45 @@ lcmsIntensityByMass=function(lcms,breaks=NULL,integrationTable=NULL,rt=NULL,mz=N
       {
         line_int=integrationTable[,"name"]==name_ion
         intens=peaks2[peaks2[,"x"]< integrationTable[line_int,"sup"]&peaks2[,"x"]>integrationTable[line_int,"inf"],]
-        if(dim(intens)[1]==1)
-        {
-          res[name_ion]=intens[,"intensity"]
-          mzmat[name_ion]=intens[,"x"]
-          mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
 
-          if(1e6*abs(mzmat[name_ion]-mztheo[name_ion])/mztheo[name_ion]>ppm){res[name_ion]=NA}
-          if(centroided)
-          {
-            rt_obs[name_ion]=intens[,"rt"]
-          }
-        }
-        if(dim(intens)[1]>1)
+        if(dim(intens)[1]>minimalNumberOfPoints)
         {
-          rtimeObs=MSnbase::rtime(lcms)
-          pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1]))
-          wm=myWhichMin(mz_obs=intens[,"x"],mz_theo=integrationTable[line_int,"mz"],ppm=ppm,centroided=centroided)
-          mzmat[name_ion]=mean(intens[wm,"x"],na.rm=T)
-          mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
-          if(centroided)
+          if(dim(intens)[1]==1)
           {
-            rt_obs[name_ion]=mean(intens[wm,"rt"])
-            res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)*pasRtMoyen
+            res[name_ion]=intens[,"intensity"]
+            mzmat[name_ion]=intens[,"x"]
+            mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
+
+            if(1e6*abs(mzmat[name_ion]-mztheo[name_ion])/mztheo[name_ion]>ppm){res[name_ion]=NA}
+            if(centroided)
+            {
+              rt_obs[name_ion]=intens[,"rt"]
+            }
           }
-          else
+          if(dim(intens)[1]>1)
           {
-            res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)
+            rtimeObs=MSnbase::rtime(lcms)
+            pasRtMoyen=mean(diff(rtimeObs),na.rm=T)/((rt[2]-rt[1]))
+            wm=myWhichMin(mz_obs=intens[,"x"],mz_theo=integrationTable[line_int,"mz"],ppm=ppm,centroided=centroided)
+            mzmat[name_ion]=mean(intens[wm,"x"],na.rm=T)
+            mztheo[name_ion]=integrationTable[integrationTable[,"name"]==name_ion,"mz"]
+            if(centroided)
+            {
+              if(sum(wm)>minimalNumberOfPoints)
+              {
+                rt_obs[name_ion]=mean(intens[wm,"rt"])
+                res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)*pasRtMoyen
+              }
+
+            }
+            else
+            {
+              res[name_ion]=sum(intens[wm,"intensity"],na.rm=T)
+            }
           }
         }
+
       }
-
       resdf=data.frame(name=names(res),theo_mz=mztheo,mz=mzmat,intensity=res)
       if(centroided){resdf[,"rt"]=rt_obs}
     }
