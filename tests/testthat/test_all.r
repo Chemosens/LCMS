@@ -9,7 +9,7 @@ library(LCMS)
 #
 # Setting parameters
 #======================
-# setwd("C:/INRA/LCMS/tests/testthat")
+# setwd("C:/Users/capeltier/Mes Documents/LCMS/tests/testthat")
 repoData="./../../extdata"
 # Where are the .xml ?
 reposaveQC="./../../tmp/centroid"
@@ -45,11 +45,11 @@ reposaveBL="./../../tmp/centroid1"
 blankFiles=c("CSCQ001.mzXML")
 resBlanks=calculateIntensity(repoData=repoData,files=blankFiles,integrationTable=integrationTable,classTable)
 resBlanks$call
- getCsvOfIntensity(resBlanks, reposave=reposaveBL)
+getCsvOfIntensity(resBlanks, reposave=reposaveBL)
 eb= getExcelOfIntensity(reposaveBL,nameFile="BL.xlsx")
 index_std=!is.na(eb$df_class[[1]][,"std"])&eb$df_class[[1]][,"std"]=="no"
 test_that("check includeStd option -1sample",{expect_true(
-sum(eb$df_class[[1]][index_std,"CSCQ001.mzXML"])==eb$total[1,"CSCQ001.mzXML"]
+sum(eb$df_class[[1]][index_std,"CSCQ001.mzXML"],na.rm=T)==eb$total[1,"CSCQ001.mzXML"]
 )})
 # Is that also working for dataset with no standards ?
 #======================================================
